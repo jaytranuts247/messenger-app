@@ -16,7 +16,7 @@ const useStyles = makeStyles(() => ({
     display: "flex",
     flexDirection: "column",
     flexGrow: 1,
-    justifyContent: "space-between"
+    justifyContent: "flex-end"
   }
 }));
 
@@ -57,7 +57,8 @@ const mapStateToProps = (state) => {
     conversation:
       state.conversations &&
       state.conversations.find(
-        (conversation) => conversation.otherUser.username === state.activeConversation
+        (conversation) =>
+          conversation.otherUser.username === state.activeConversation
       )
   };
 };
