@@ -8,7 +8,7 @@ import {
   Button,
   FormControl,
   TextField,
-  FormHelperText,
+  FormHelperText
 } from "@material-ui/core";
 import { register } from "./store/utils/thunkCreators";
 
@@ -37,7 +37,7 @@ const Login = (props) => {
   }
 
   return (
-    <Grid container justify="center">
+    <Grid container justifyContent="center">
       <Box>
         <Grid container item>
           <Typography>Need to log in?</Typography>
@@ -109,7 +109,7 @@ const Login = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    user: state.user,
+    user: state.user
   };
 };
 
@@ -117,7 +117,7 @@ const mapDispatchToProps = (dispatch) => {
   return {
     register: (credentials) => {
       dispatch(register(credentials));
-    },
+    }
   };
 };
 
