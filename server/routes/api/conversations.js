@@ -16,36 +16,36 @@ router.get("/", async (req, res, next) => {
       where: {
         [Op.or]: {
           user1Id: userId,
-          user2Id: userId,
-        },
+          user2Id: userId
+        }
       },
       attributes: ["id"],
-      order: [[Message, "createdAt", "DESC"]],
+      order: [[Message, "createdAt", "ASC"]],
       include: [
-        { model: Message, order: ["createdAt", "DESC"] },
+        { model: Message, order: ["createdAt", "ASC"] },
         {
           model: User,
           as: "user1",
           where: {
             id: {
-              [Op.not]: userId,
-            },
+              [Op.not]: userId
+            }
           },
           attributes: ["id", "username", "photoUrl"],
-          required: false,
+          required: false
         },
         {
           model: User,
           as: "user2",
           where: {
             id: {
-              [Op.not]: userId,
-            },
+              [Op.not]: userId
+            }
           },
           attributes: ["id", "username", "photoUrl"],
-          required: false,
-        },
-      ],
+          required: false
+        }
+      ]
     });
 
     for (let i = 0; i < conversations.length; i++) {
