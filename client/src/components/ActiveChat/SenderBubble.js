@@ -1,6 +1,7 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box, Typography } from "@material-ui/core";
+import DoneAllIcon from "@material-ui/icons/DoneAll";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -12,7 +13,8 @@ const useStyles = makeStyles(() => ({
     fontSize: 11,
     color: "#BECCE2",
     fontWeight: "bold",
-    marginBottom: 5
+    marginBottom: 5,
+    textAlign: "center"
   },
   text: {
     fontSize: 14,
@@ -27,14 +29,18 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const SenderBubble = (props) => {
+const SenderBubble = props => {
   const classes = useStyles();
-  const { time, text } = props;
+  const { time, text, readStatus } = props;
   return (
     <Box className={classes.root}>
-      <Typography className={classes.date}>{time}</Typography>
+      <Typography className={classes.date}>
+        {time} {readStatus ? <DoneAllIcon fontSize=".9px" /> : null}
+      </Typography>
       <Box className={classes.bubble}>
-        <Typography className={classes.text}>{text}</Typography>
+        <Typography className={classes.text}>
+          {text}
+        </Typography>
       </Box>
     </Box>
   );

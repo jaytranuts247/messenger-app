@@ -26,7 +26,7 @@ router.post("/", async (req, res, next) => {
       // create conversation
       conversation = await Conversation.create({
         user1Id: senderId,
-        user2Id: recipientId,
+        user2Id: recipientId
       });
       if (onlineUsers.includes(sender.id)) {
         sender.online = true;
@@ -36,8 +36,19 @@ router.post("/", async (req, res, next) => {
       senderId,
       text,
       conversationId: conversation.id,
+      readStatus: false,
+      readById: null,
+      readTime: null
     });
     res.json({ message, sender });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// { senderId, recipientId,  }
+router.pacth("/", async (req, res, next) => {
+  try {
   } catch (error) {
     next(error);
   }

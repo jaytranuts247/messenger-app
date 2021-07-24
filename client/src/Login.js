@@ -11,11 +11,11 @@ import {
 } from "@material-ui/core";
 import { login } from "./store/utils/thunkCreators";
 
-const Login = (props) => {
+const Login = props => {
   const history = useHistory();
   const { user, login } = props;
 
-  const handleLogin = async (event) => {
+  const handleLogin = async event => {
     event.preventDefault();
     const username = event.target.username.value;
     const password = event.target.password.value;
@@ -66,15 +66,15 @@ const Login = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     user: state.user
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
-    login: (credentials) => {
+    login: credentials => {
       dispatch(login(credentials));
     }
   };
