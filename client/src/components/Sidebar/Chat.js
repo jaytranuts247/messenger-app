@@ -14,9 +14,9 @@ const styles = {
     display: "flex",
     alignItems: "center",
     "&:hover": {
-      cursor: "grab"
-    }
-  }
+      cursor: "grab",
+    },
+  },
 };
 
 class Chat extends Component {
@@ -48,7 +48,7 @@ const mapDispatchToProps = (dispatch) => {
   return {
     setActiveChat: (username) => {
       dispatch(setActiveChat(username));
-    }
+    },
   };
 };
 
