@@ -1,8 +1,7 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Box, Typography } from "@material-ui/core";
-import DoneAllIcon from "@material-ui/icons/DoneAll";
-import CheckCircleIcon from "@material-ui/icons/CheckCircle";
+import { Avatar, Box, Typography } from "@material-ui/core";
+
 const useStyles = makeStyles(() => ({
   root: {
     display: "flex",
@@ -29,11 +28,16 @@ const useStyles = makeStyles(() => ({
     background: "#F4F6FA",
     borderRadius: "10px 10px 0 10px",
   },
+  readStatusIndicator: {
+    height: "18px",
+    width: "18px",
+    marginTop: "3px",
+  },
 }));
 
 const SenderBubble = (props) => {
   const classes = useStyles();
-  const { time, text, readStatus, isTyping } = props;
+  const { time, text, readStatus, isTyping, otherUser } = props;
   return (
     <Box className={classes.root}>
       <Typography className={classes.date}>{time}</Typography>
@@ -43,11 +47,15 @@ const SenderBubble = (props) => {
             {isTyping ? "isTyping" : text}
           </Typography>
         </Box>
-        <Box style={{ textAlign: "center" }}>
-          {readStatus ? (
-            <DoneAllIcon fontSize="small" style={{ color: "#3A8DFF" }} />
-          ) : null}
-        </Box>
+      </Box>
+      <Box style={{ textAlign: "center" }}>
+        {readStatus && (
+          <Avatar
+            alt={otherUser.username}
+            src={otherUser.photoUrl}
+            className={classes.readStatusIndicator}
+          ></Avatar>
+        )}
       </Box>
     </Box>
   );
