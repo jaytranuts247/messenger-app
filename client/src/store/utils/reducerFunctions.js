@@ -102,3 +102,18 @@ export const updateReadMessageStatusToStore = (state, payload) => {
     return convo;
   });
 };
+
+export const setIsTypingToStore = (state, payload) => {
+  const { conversationId, isTyping } = payload;
+
+  return state.map((convo) => {
+    if (convo.id === conversationId) {
+      let newConvo = { ...convo };
+
+      newConvo.isTyping = isTyping;
+      console.log(newConvo);
+      return newConvo;
+    }
+    return convo;
+  });
+};

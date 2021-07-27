@@ -33,13 +33,15 @@ const useStyles = makeStyles(() => ({
 
 const SenderBubble = (props) => {
   const classes = useStyles();
-  const { time, text, readStatus } = props;
+  const { time, text, readStatus, isTyping } = props;
   return (
     <Box className={classes.root}>
       <Typography className={classes.date}>{time}</Typography>
       <Box className={classes.message}>
         <Box className={classes.bubble}>
-          <Typography className={classes.text}>{text}</Typography>
+          <Typography className={classes.text}>
+            {isTyping ? "isTyping" : text}
+          </Typography>
         </Box>
         <Box style={{ textAlign: "center" }}>
           {readStatus ? (

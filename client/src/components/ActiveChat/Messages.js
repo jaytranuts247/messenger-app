@@ -12,10 +12,19 @@ const useStyles = makeStyles(() => ({
 }));
 
 const Messages = (props) => {
-  const { messages, otherUser, userId } = props;
+  const { messages, otherUser, userId, isTyping } = props;
   const classes = useStyles();
+
   return (
     <Box className={classes.root}>
+      {isTyping && (
+        <OtherUserBubble
+          text={""}
+          time={moment(Date.now()).format("h:mm")}
+          otherUser={otherUser}
+          isTyping={isTyping}
+        />
+      )}
       {messages.map((message) => {
         const time = moment(message.createdAt).format("h:mm");
 
@@ -25,6 +34,7 @@ const Messages = (props) => {
             text={message.text}
             time={time}
             readStatus={message.readStatus}
+            isTyping={message.isTyping}
           />
         ) : (
           <OtherUserBubble

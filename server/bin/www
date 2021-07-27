@@ -59,6 +59,10 @@ io.on("connection", (socket) => {
       socket.broadcast.emit("remove-offline-user", id);
     }
   });
+
+  socket.on("is-typing", (data) => {
+    socket.broadcast.emit("is-typing", data);
+  });
 });
 
 sessionStore

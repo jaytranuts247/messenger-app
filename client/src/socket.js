@@ -5,6 +5,7 @@ import {
   removeOfflineUser,
   addOnlineUser,
   setReadMessage,
+  setIsTyping,
 } from "./store/conversations";
 import { updateMessageStatusHandler } from "./store/utils/thunkCreators";
 
@@ -30,6 +31,9 @@ socket.on("connect", () => {
     //  update new message
     store.dispatch(setNewMessage(data.message, data.sender));
 
+    // remove typing indicator on new message receive
+    store.dispatch(setIsTyping(data.message.conversationId, false));
+
     // emit read-message
     store.dispatch(
       updateMessageStatusHandler(
@@ -43,6 +47,12 @@ socket.on("connect", () => {
 
   socket.on("read-message", async (data) => {
     store.dispatch(setReadMessage(data.conversationId, data.messages));
+  });
+
+  // { isTyping, senderId, recipientId, conversationId }
+  socket.on("is-typing", (data) => {
+    const { conversationId, isTyping } = data;
+    store.dispatch(setIsTyping(conversationId, isTyping));
   });
 });
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Typography, Badge } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
@@ -64,7 +64,7 @@ const ChatContent = (props) => {
           {otherUser.username}
         </Typography>
         <Typography className={classes.previewText}>
-          {latestMessageText}
+          <i>{conversation.isTyping ? "...Typing" : latestMessageText}</i>
         </Typography>
       </Box>
       <Box className={classes.unreadMessageBox}>

@@ -3,6 +3,8 @@ import { FormControl, FilledInput } from "@material-ui/core";
 import { withStyles } from "@material-ui/core/styles";
 import { connect } from "react-redux";
 import { postMessage } from "../../store/utils/thunkCreators";
+import _ from "lodash";
+import socket from "../../socket";
 
 const styles = {
   root: {
@@ -23,9 +25,41 @@ class Input extends Component {
     this.state = {
       text: "",
     };
+    this.isTyping = false;
+    this.timeout = undefined;
   }
 
+  timeoutFunction = () => {
+    this.isTyping = false;
+
+    socket.emit("is-typing", {
+      senderId: this.props.user.id,
+      recipient: this.props.otherUser.id,
+      conversationId: this.props.conversationId,
+      isTyping: this.isTyping,
+    });
+  };
+
+  sendIsTypingStatus = () => {
+    if (this.isTyping === false) {
+      this.isTyping = true;
+
+      socket.emit("is-typing", {
+        senderId: this.props.user.id,
+        recipient: this.props.otherUser.id,
+        conversationId: this.props.conversationId,
+        isTyping: this.isTyping,
+      });
+
+      this.timeout = setTimeout(this.timeoutFunction, 5000);
+    } else {
+      clearTimeout(this.timeout);
+      this.timeout = setTimeout(this.timeoutFunction, 5000);
+    }
+  };
+
   handleChange = (event) => {
+    this.sendIsTypingStatus();
     this.setState({
       text: event.target.value,
     });
