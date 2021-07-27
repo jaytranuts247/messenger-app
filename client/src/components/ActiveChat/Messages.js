@@ -7,8 +7,8 @@ import { makeStyles } from "@material-ui/core/styles";
 const useStyles = makeStyles(() => ({
   root: {
     display: "flex",
-    flexDirection: "column-reverse"
-  }
+    flexDirection: "column-reverse",
+  },
 }));
 
 const Messages = (props) => {
@@ -20,7 +20,12 @@ const Messages = (props) => {
         const time = moment(message.createdAt).format("h:mm");
 
         return message.senderId === userId ? (
-          <SenderBubble key={message.id} text={message.text} time={time} />
+          <SenderBubble
+            key={message.id}
+            text={message.text}
+            time={time}
+            readStatus={message.readStatus}
+          />
         ) : (
           <OtherUserBubble
             key={message.id}

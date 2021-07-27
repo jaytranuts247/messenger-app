@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Box, Typography, Badge } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
@@ -45,18 +45,18 @@ const countUnReadMessage = (messages, otherUserId) =>
   );
 
 const ChatContent = (props) => {
-  const [unReadMessage, setUnReadMessage] = useState(0);
-
   const classes = useStyles();
 
-  const { conversation } = props;
+  const { conversation, setUnReadMessage, unReadMessage } = props;
   const { latestMessageText, otherUser } = conversation;
 
   useEffect(() => {
+    if (!setUnReadMessage || !conversation) return;
     setUnReadMessage(
       countUnReadMessage(conversation.messages, conversation.otherUser.id)
     );
-  }, [conversation]);
+  }, [conversation, setUnReadMessage]);
+
   return (
     <Box className={classes.root}>
       <Box>
@@ -70,7 +70,7 @@ const ChatContent = (props) => {
       <Box className={classes.unreadMessageBox}>
         <Badge
           className={classes.unreadBadge}
-          badgeContent={unReadMessage}
+          badgeContent={unReadMessage || 0}
           color="primary"
           max={99}
         />

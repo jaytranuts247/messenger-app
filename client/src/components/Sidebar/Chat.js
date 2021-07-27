@@ -5,6 +5,9 @@ import { withStyles } from "@material-ui/core/styles";
 import { setActiveChat } from "../../store/activeConversation";
 import { connect } from "react-redux";
 
+import { updateMessageStatusClickHandler } from "../../store/utils/thunkCreators";
+import store from "../../store";
+
 const styles = {
   root: {
     borderRadius: 8,
@@ -20,13 +23,28 @@ const styles = {
 };
 
 class Chat extends Component {
+  state = {
+    unReadMessage: 0,
+  };
+
   handleClick = async (conversation) => {
     await this.props.setActiveChat(conversation.otherUser.username);
+
+    store.dispatch(
+      updateMessageStatusClickHandler(
+        this.props.conversation.id,
+        this.props.conversation.otherUser.id
+      )
+    );
   };
+
+  setUnReadMessage = (numOfUnReadMessages) =>
+    this.setState({ unReadMessage: numOfUnReadMessages });
 
   render() {
     const { classes } = this.props;
     const otherUser = this.props.conversation.otherUser;
+
     return (
       <Box
         onClick={() => this.handleClick(this.props.conversation)}
@@ -38,11 +56,23 @@ class Chat extends Component {
           online={otherUser.online}
           sidebar={true}
         />
-        <ChatContent conversation={this.props.conversation} />
+        <ChatContent
+          conversation={this.props.conversation}
+          unReadMessage={this.state.unReadMessage}
+          setUnReadMessage={this.setUnReadMessage}
+        />
       </Box>
     );
   }
 }
+
+const mapStateToProps = (state) => {
+  return {
+    user: state.user,
+    conversations: state.conversations,
+    activeConversation: state.activeConversation,
+  };
+};
 
 const mapDispatchToProps = (dispatch) => {
   return {
@@ -52,4 +82,7 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-export default connect(null, mapDispatchToProps)(withStyles(styles)(Chat));
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withStyles(styles)(Chat));

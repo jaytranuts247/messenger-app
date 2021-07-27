@@ -5,6 +5,7 @@ import {
   addConversation,
   setNewMessage,
   setSearchedUsers,
+  setReadMessage,
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
 
@@ -117,3 +118,60 @@ export const searchUsers = (searchTerm) => async (dispatch) => {
     console.error(error);
   }
 };
+
+export const updateMessageStatus = async (senderId, activeConversationId) => {
+  const { data } = await axios.patch("/api/messages", {
+    senderId,
+    activeConversationId,
+  });
+  return data;
+};
+
+const sendReadMessageStatus = (conversationId, messages) => {
+  socket.emit("read-message", {
+    conversationId,
+    messages,
+  });
+};
+
+export const updateMessageStatusHandler =
+  (activeConversation, conversations, conversationId, senderId) =>
+  async (dispatch) => {
+    try {
+      // no active chat, not send read-message event
+      if (activeConversation === "") return;
+
+      const activeConvo = conversations.find(
+        (convo) => convo.otherUser.username === activeConversation
+      );
+
+      // no convo found OR activeConversation is message conversationId, return
+      if (!activeConvo || activeConvo.id !== conversationId) return;
+
+      const data = await updateMessageStatus(senderId, activeConvo.id);
+
+      //  if not found messages to update, then return
+      if (!Array.isArray(data.messages) || !data.messages.length) return;
+
+      dispatch(setReadMessage(data.messages[0].conversationId, data.messages));
+
+      sendReadMessageStatus(data.messages[0].conversationId, data.messages);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+export const updateMessageStatusClickHandler =
+  (conversationId, otherUserId) => async (dispatch) => {
+    try {
+      const data = await updateMessageStatus(otherUserId, conversationId);
+
+      //  if not found messages to update, then return
+      if (!Array.isArray(data.messages) || !data.messages.length) return;
+
+      dispatch(setReadMessage(conversationId, data.messages));
+      sendReadMessageStatus(conversationId, data.messages);
+    } catch (error) {
+      console.error(error);
+    }
+  };

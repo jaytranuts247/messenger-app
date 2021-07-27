@@ -44,8 +44,12 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("new-message", {
       message: data.message,
       sender: data.sender,
-      recipientId: data.recipientId
+      recipientId: data.recipientId,
     });
+  });
+
+  socket.on("read-message", (data) => {
+    socket.broadcast.emit("read-message", data);
   });
 
   socket.on("logout", (id) => {

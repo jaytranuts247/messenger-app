@@ -81,3 +81,24 @@ export const addNewConvoToStore = (state, recipientId, message) => {
     }
   });
 };
+
+export const updateReadMessageStatusToStore = (state, payload) => {
+  const { messagesToUpdate, conversationId } = payload;
+
+  // start update message in messagesToUpdate array
+  return state.map((convo) => {
+    if (convo.id === conversationId) {
+      let newConvo = { ...convo };
+
+      messagesToUpdate.forEach((message) => {
+        let foundMessageIndex = newConvo.messages.findIndex(
+          (msg) => msg.id === message.id
+        );
+        newConvo.messages[foundMessageIndex] = { ...message };
+      });
+
+      return newConvo;
+    }
+    return convo;
+  });
+};
