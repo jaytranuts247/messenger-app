@@ -14,13 +14,6 @@ const Message = db.define("message", {
     type: Sequelize.BOOLEAN,
     defaultValue: false,
   },
-  readById: {
-    type: Sequelize.STRING,
-    defaultValue: null,
-  },
-  readTime: {
-    type: Sequelize.DATE,
-  },
 });
 
 module.exports = Message;

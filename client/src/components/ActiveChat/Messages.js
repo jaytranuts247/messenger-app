@@ -1,53 +1,47 @@
 import React from "react";
-import { Box } from "@material-ui/core";
+import { Grid } from "@material-ui/core";
 import { SenderBubble, OtherUserBubble } from "../ActiveChat";
 import moment from "moment";
-import { makeStyles } from "@material-ui/core/styles";
-
-const useStyles = makeStyles(() => ({
-  root: {
-    display: "flex",
-    flexDirection: "column-reverse",
-  },
-}));
 
 const Messages = (props) => {
   const { messages, otherUser, userId, isTyping, readMessageId } = props;
 
-  const classes = useStyles();
-
   return (
-    <Box className={classes.root}>
+    <Grid container direction="column-reverse">
       {isTyping && (
-        <OtherUserBubble
-          text={""}
-          time={moment(Date.now()).format("h:mm")}
-          otherUser={otherUser}
-          isTyping={isTyping}
-        />
+        <Grid item>
+          <OtherUserBubble
+            text={""}
+            time={moment(Date.now()).format("h:mm")}
+            otherUser={otherUser}
+            isTyping={isTyping}
+          />
+        </Grid>
       )}
       {messages.map((message) => {
         const time = moment(message.createdAt).format("h:mm");
 
-        return message.senderId === userId ? (
-          <SenderBubble
-            key={message.id}
-            text={message.text}
-            time={time}
-            readStatus={message.readStatus && readMessageId === message.id}
-            isTyping={message.isTyping}
-            otherUser={otherUser}
-          />
-        ) : (
-          <OtherUserBubble
-            key={message.id}
-            text={message.text}
-            time={time}
-            otherUser={otherUser}
-          />
+        return (
+          <Grid item key={message.id}>
+            {message.senderId === userId ? (
+              <SenderBubble
+                text={message.text}
+                time={time}
+                readStatus={message.readStatus && readMessageId === message.id}
+                isTyping={message.isTyping}
+                otherUser={otherUser}
+              />
+            ) : (
+              <OtherUserBubble
+                text={message.text}
+                time={time}
+                otherUser={otherUser}
+              />
+            )}
+          </Grid>
         );
       })}
-    </Box>
+    </Grid>
   );
 };
 

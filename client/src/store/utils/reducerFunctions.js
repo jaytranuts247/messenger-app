@@ -83,18 +83,15 @@ export const addNewConvoToStore = (state, recipientId, message) => {
 };
 
 export const updateReadMessageStatusToStore = (state, payload) => {
-  const { messagesToUpdate, conversationId } = payload;
+  const { senderId, conversationId } = payload;
 
   // start update message in messagesToUpdate array
   return state.map((convo) => {
     if (convo.id === conversationId) {
       let newConvo = { ...convo };
 
-      messagesToUpdate.forEach((message) => {
-        let foundMessageIndex = newConvo.messages.findIndex(
-          (msg) => msg.id === message.id
-        );
-        newConvo.messages[foundMessageIndex] = { ...message };
+      newConvo.messages.forEach((message) => {
+        if (message.senderId === senderId) message.readStatus = true;
       });
 
       return newConvo;
@@ -112,6 +109,67 @@ export const setIsTypingToStore = (state, payload) => {
 
       newConvo.isTyping = isTyping;
       console.log(newConvo);
+      return newConvo;
+    }
+    return convo;
+  });
+};
+
+export const setUnReadMessageToStore = (state, payload) => {
+  const { conversationId, unReadMessageCount } = payload;
+
+  const foundConvo = state.find(
+    (convo) => convo.conversationId === conversationId
+  );
+
+  if (!foundConvo) {
+    return [
+      { conversationId, unReadMessageCount: unReadMessageCount },
+      ...state,
+    ];
+  }
+
+  return state.map((convo) => {
+    if (convo.conversationId === conversationId) {
+      let newConvo = { ...convo };
+      newConvo.unReadMessageCount = unReadMessageCount;
+      return newConvo;
+    }
+    return convo;
+  });
+};
+
+export const incrementUnReadMessageToStore = (state, conversationId) => {
+  const foundConvo = state.find(
+    (convo) => convo.conversationId === conversationId
+  );
+
+  if (!foundConvo) {
+    return [{ conversationId, unReadMessageCount: 0 }, ...state];
+  }
+
+  return state.map((convo) => {
+    if (convo.conversationId === conversationId) {
+      let newConvo = { ...convo };
+      newConvo.unReadMessageCount++;
+      return newConvo;
+    }
+    return convo;
+  });
+};
+
+export const resetUnReadMessageToStore = (state, conversationId) => {
+  const foundConvo = state.find(
+    (convo) => convo.conversationId === conversationId
+  );
+
+  if (!foundConvo) return state;
+
+  return state.map((convo) => {
+    if (convo.conversationId === conversationId) {
+      let newConvo = { ...convo };
+
+      newConvo.unReadMessageCount = 0;
       return newConvo;
     }
     return convo;

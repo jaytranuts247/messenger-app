@@ -52,7 +52,7 @@ router.post("/", async (req, res, next) => {
 });
 
 // Update mssage read status in conversation
-router.patch("/", async (req, res, next) => {
+router.patch("/read", async (req, res, next) => {
   try {
     if (!req.user) {
       return res.sendStatus(401);
@@ -61,75 +61,35 @@ router.patch("/", async (req, res, next) => {
     const { senderId, activeConversationId } = req.body;
 
     // check if activeConversationId is exist
-    if (activeConversationId) {
-      let conversation = await Conversation.findConversationById(
-        activeConversationId,
-        senderId,
-        req.user.id
-      );
+    if (!activeConversationId) return res.sendStatus(400);
 
-      // if not exist return error
-      if (!conversation) return res.json(conversation);
-
-      // if activeConversationId exists, start update messages
-      const messages = await Message.findAll({
-        where: {
-          conversationId: activeConversationId,
-          senderId: {
-            [Op.eq]: senderId,
-          },
-          readStatus: {
-            [Op.is]: false,
-          },
-        },
-      });
-
-      // there is no messages, then return empty array
-      if (!Array.isArray(messages) || !messages.length)
-        return res.json({ messages });
-
-      // if have messages, update read message status
-      messages.forEach((message) => {
-        if (!message.readStatus) message.readStatus = true;
-        message.readById = senderId;
-        message.readTime = Date.now();
-      });
-
-      // save updated messages
-      await Promise.all(messages.map(async (message) => await message.save()));
-      return res.json({ messages });
-    }
-
-    let conversation = await Conversation.findConversation(
+    let conversation = await Conversation.findConversationById(
+      activeConversationId,
       senderId,
       req.user.id
     );
 
     // if not found conversation return error
-    if (!conversation) return res.json(conversation);
+    if (!conversation) return res.sendStatus(404);
 
-    const messages = await Message.findAll({
-      where: {
-        conversationId: activeConversationId,
-        senderId: {
-          [Op.ne]: senderId,
+    let updatedMessages = await Message.update(
+      { readStatus: true },
+      {
+        where: {
+          conversationId: activeConversationId,
+          senderId: {
+            [Op.ne]: senderId,
+          },
+          readStatus: {
+            [Op.eq]: false,
+          },
         },
-      },
-    });
+      }
+    );
 
-    // if array messages is empty
-    if (!Array.isArray(messages) || !messages.length)
-      return res.json({ messages });
+    console.log(updatedMessages);
 
-    // update massage status
-    messages.forEach((message) => {
-      if (!message.readStatus) message.readStatus = true;
-      message.readById = senderId;
-      message.readTime = Date.now();
-    });
-
-    await Promise.all(messages.map(async (message) => await message.save()));
-    return res.json({ messages });
+    return res.sendStatus(204);
   } catch (error) {
     next(error);
   }

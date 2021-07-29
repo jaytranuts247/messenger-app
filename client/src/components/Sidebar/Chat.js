@@ -5,8 +5,8 @@ import { withStyles } from "@material-ui/core/styles";
 import { setActiveChat } from "../../store/activeConversation";
 import { connect } from "react-redux";
 
-import { updateMessageStatusClickHandler } from "../../store/utils/thunkCreators";
-import store from "../../store";
+import { updateMessageStatusHandler } from "../../store/utils/thunkCreators";
+import { resetUnReadMessage } from "../../store/unReadMessages";
 
 const styles = {
   root: {
@@ -23,23 +23,20 @@ const styles = {
 };
 
 class Chat extends Component {
-  state = {
-    unReadMessage: 0,
-  };
-
   handleClick = async (conversation) => {
     await this.props.setActiveChat(conversation.otherUser.username);
 
-    store.dispatch(
-      updateMessageStatusClickHandler(
-        this.props.conversation.id,
-        this.props.conversation.otherUser.id
-      )
-    );
-  };
+    // if there is no conversation Id, no need to process and send read status
+    if (!this.props.conversation.id) return;
 
-  setUnReadMessage = (numOfUnReadMessages) =>
-    this.setState({ unReadMessage: numOfUnReadMessages });
+    this.props.updateMessageStatusHandler(
+      this.props.activeConversation,
+      this.props.conversations,
+      this.props.conversation.id,
+      this.props.conversation.otherUser.id
+    );
+    this.props.resetUnReadMessage(this.props.conversation.id);
+  };
 
   render() {
     const { classes } = this.props;
@@ -56,11 +53,7 @@ class Chat extends Component {
           online={otherUser.online}
           sidebar={true}
         />
-        <ChatContent
-          conversation={this.props.conversation}
-          unReadMessage={this.state.unReadMessage}
-          setUnReadMessage={this.setUnReadMessage}
-        />
+        <ChatContent conversation={this.props.conversation} />
       </Box>
     );
   }
@@ -68,7 +61,6 @@ class Chat extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    user: state.user,
     conversations: state.conversations,
     activeConversation: state.activeConversation,
   };
@@ -79,6 +71,22 @@ const mapDispatchToProps = (dispatch) => {
     setActiveChat: (username) => {
       dispatch(setActiveChat(username));
     },
+    updateMessageStatusHandler: (
+      activeConversation,
+      conversations,
+      conversationId,
+      senderId
+    ) =>
+      dispatch(
+        updateMessageStatusHandler(
+          activeConversation,
+          conversations,
+          conversationId,
+          senderId
+        )
+      ),
+    resetUnReadMessage: (conversationId) =>
+      dispatch(resetUnReadMessage(conversationId)),
   };
 };
 

@@ -1,6 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useMemo } from "react";
 import { Box, Typography, Badge } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
+import { connect } from "react-redux";
+import { useEffect } from "react/cjs/react.development";
+import { setUnReadMessage } from "../../store/unReadMessages";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -32,30 +35,34 @@ const useStyles = makeStyles((theme) => ({
     top: "10px",
     right: "20px",
   },
+  boldText: {
+    color: "#222",
+    fontWeight: 600,
+  },
 }));
-
-const countUnReadMessage = (messages, otherUserId) =>
-  messages.reduce(
-    (acc, message) =>
-      acc +
-      (message.readStatus === false && message.senderId === otherUserId
-        ? 1
-        : 0),
-    0
-  );
 
 const ChatContent = (props) => {
   const classes = useStyles();
 
-  const { conversation, setUnReadMessage, unReadMessage } = props;
+  const { conversation, unReadMessages, setUnReadMessageCount } = props;
   const { latestMessageText, otherUser } = conversation;
 
+  const unReadMessage = useMemo(
+    () =>
+      unReadMessages.find((convo) => convo.conversationId === conversation.id),
+    [unReadMessages]
+  );
+
+  console.log("ChatContent", unReadMessage);
   useEffect(() => {
-    if (!setUnReadMessage || !conversation) return;
-    setUnReadMessage(
-      countUnReadMessage(conversation.messages, conversation.otherUser.id)
+    let unReadMessageCount = conversation.messages.reduce(
+      (acc, message) =>
+        acc +
+        (message.senderId === otherUser.id && !message.readStatus ? 1 : 0),
+      0
     );
-  }, [conversation, setUnReadMessage]);
+    setUnReadMessageCount(conversation.id, unReadMessageCount);
+  }, []);
 
   return (
     <Box className={classes.root}>
@@ -64,13 +71,19 @@ const ChatContent = (props) => {
           {otherUser.username}
         </Typography>
         <Typography className={classes.previewText}>
-          <i>{conversation.isTyping ? "...Typing" : latestMessageText}</i>
+          {conversation.isTyping ? (
+            <i>...Typing</i>
+          ) : unReadMessage && unReadMessage.unReadMessageCount !== 0 ? (
+            <p className={classes.boldText}>{latestMessageText}</p>
+          ) : (
+            latestMessageText
+          )}
         </Typography>
       </Box>
       <Box className={classes.unreadMessageBox}>
         <Badge
           className={classes.unreadBadge}
-          badgeContent={unReadMessage || 0}
+          badgeContent={unReadMessage ? unReadMessage.unReadMessageCount : 0}
           color="primary"
           max={99}
         />
@@ -79,4 +92,15 @@ const ChatContent = (props) => {
   );
 };
 
-export default ChatContent;
+const mapStateToProps = (state) => ({
+  unReadMessages: state.unReadMessages,
+});
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    setUnReadMessageCount: (conversationId, unReadMessageCount) =>
+      dispatch(setUnReadMessage(conversationId, unReadMessageCount)),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatContent);

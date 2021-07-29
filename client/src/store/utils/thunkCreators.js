@@ -120,17 +120,17 @@ export const searchUsers = (searchTerm) => async (dispatch) => {
 };
 
 export const updateMessageStatus = async (senderId, activeConversationId) => {
-  const { data } = await axios.patch("/api/messages", {
+  const { data } = await axios.patch("/api/messages/read", {
     senderId,
     activeConversationId,
   });
   return data;
 };
 
-const sendReadMessageStatus = (conversationId, messages) => {
+const sendReadMessageStatus = (senderId, conversationId) => {
   socket.emit("read-message", {
+    senderId,
     conversationId,
-    messages,
   });
 };
 
@@ -144,33 +144,16 @@ export const updateMessageStatusHandler =
       const activeConvo = conversations.find(
         (convo) => convo.otherUser.username === activeConversation
       );
-
+      console.log("updateMessageStatusHandler", activeConvo);
       // no convo found OR activeConversation is message conversationId, return
       if (!activeConvo || activeConvo.id !== conversationId) return;
 
-      const data = await updateMessageStatus(senderId, activeConvo.id);
+      // update  read message status in db
+      await updateMessageStatus(senderId, activeConvo.id);
 
-      //  if not found messages to update, then return
-      if (!Array.isArray(data.messages) || !data.messages.length) return;
+      dispatch(setReadMessage(senderId, activeConvo.id));
 
-      dispatch(setReadMessage(data.messages[0].conversationId, data.messages));
-
-      sendReadMessageStatus(data.messages[0].conversationId, data.messages);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-export const updateMessageStatusClickHandler =
-  (conversationId, otherUserId) => async (dispatch) => {
-    try {
-      const data = await updateMessageStatus(otherUserId, conversationId);
-
-      //  if not found messages to update, then return
-      if (!Array.isArray(data.messages) || !data.messages.length) return;
-
-      dispatch(setReadMessage(conversationId, data.messages));
-      sendReadMessageStatus(conversationId, data.messages);
+      sendReadMessageStatus(senderId, activeConvo.id);
     } catch (error) {
       console.error(error);
     }

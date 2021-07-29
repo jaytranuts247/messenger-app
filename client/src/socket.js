@@ -8,6 +8,7 @@ import {
   setIsTyping,
 } from "./store/conversations";
 import { updateMessageStatusHandler } from "./store/utils/thunkCreators";
+import { incrementUnReadMessage } from "./store/unReadMessages";
 
 const socket = io(window.location.origin);
 
@@ -34,6 +35,9 @@ socket.on("connect", () => {
     // remove typing indicator on new message receive
     store.dispatch(setIsTyping(data.message.conversationId, false));
 
+    // increment unReadMessageCount
+    store.dispatch(incrementUnReadMessage(data.message.conversationId));
+
     // emit read-message
     store.dispatch(
       updateMessageStatusHandler(
@@ -46,7 +50,7 @@ socket.on("connect", () => {
   });
 
   socket.on("read-message", async (data) => {
-    store.dispatch(setReadMessage(data.conversationId, data.messages));
+    store.dispatch(setReadMessage(data.senderId, data.conversationId));
   });
 
   // { isTyping, senderId, recipientId, conversationId }

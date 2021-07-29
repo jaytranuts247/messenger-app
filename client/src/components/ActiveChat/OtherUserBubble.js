@@ -31,6 +31,9 @@ const useStyles = makeStyles(() => ({
     padding: 8,
     textAlign: "center",
   },
+  type: {
+    fontSize: "12px",
+  },
 }));
 
 const OtherUserBubble = (props) => {
@@ -51,18 +54,9 @@ const OtherUserBubble = (props) => {
           <Typography className={classes.text}>
             {isTyping ? (
               <>
-                <FiberManualRecordIcon
-                  color="#fff"
-                  style={{ fontSize: "12px" }}
-                />
-                <FiberManualRecordIcon
-                  color="#fff"
-                  style={{ fontSize: "12px" }}
-                />
-                <FiberManualRecordIcon
-                  color="#fff"
-                  style={{ fontSize: "12px" }}
-                />
+                <FiberManualRecordIcon color="#fff" className={classes.type} />
+                <FiberManualRecordIcon color="#fff" className={classes.type} />
+                <FiberManualRecordIcon color="#fff" className={classes.type} />
               </>
             ) : (
               text

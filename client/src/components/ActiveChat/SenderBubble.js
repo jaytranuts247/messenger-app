@@ -48,7 +48,7 @@ const SenderBubble = (props) => {
           </Typography>
         </Box>
       </Box>
-      <Box style={{ textAlign: "center" }}>
+      <Box>
         {readStatus && (
           <Avatar
             alt={otherUser.username}
