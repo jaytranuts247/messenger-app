@@ -8,15 +8,15 @@ const useStyles = makeStyles(() => ({
   root: {
     paddingLeft: 21,
     paddingRight: 21,
-    flexGrow: 1
+    flexGrow: 1,
   },
   title: {
     fontSize: 20,
     letterSpacing: -0.29,
     fontWeight: "bold",
     marginTop: 32,
-    marginBottom: 15
-  }
+    marginBottom: 15,
+  },
 }));
 
 const Sidebar = (props) => {
@@ -56,7 +56,7 @@ const Sidebar = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    conversations: state.conversations
+    conversations: state.conversations,
   };
 };
 

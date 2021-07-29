@@ -53,7 +53,6 @@ const ChatContent = (props) => {
     [unReadMessages]
   );
 
-  console.log("ChatContent", unReadMessage);
   useEffect(() => {
     let unReadMessageCount = conversation.messages.reduce(
       (acc, message) =>

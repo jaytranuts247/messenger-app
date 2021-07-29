@@ -7,6 +7,7 @@ import {
   setSearchedUsers,
   setReadMessage,
 } from "../conversations";
+import { setReadMessageId } from "../readMessages";
 import { gotUser, setFetchingStatus } from "../user";
 
 axios.interceptors.request.use(async function (config) {
@@ -144,7 +145,7 @@ export const updateMessageStatusHandler =
       const activeConvo = conversations.find(
         (convo) => convo.otherUser.username === activeConversation
       );
-      console.log("updateMessageStatusHandler", activeConvo);
+
       // no convo found OR activeConversation is message conversationId, return
       if (!activeConvo || activeConvo.id !== conversationId) return;
 
@@ -154,6 +155,45 @@ export const updateMessageStatusHandler =
       dispatch(setReadMessage(senderId, activeConvo.id));
 
       sendReadMessageStatus(senderId, activeConvo.id);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+export const setReadMessageIdHandler =
+  (conversations, conversationId) => (dispatch) => {
+    try {
+      if (!conversationId) return;
+      const foundConvo = conversations.find(
+        (convo) => convo.id === conversationId
+      );
+
+      if (!foundConvo) return;
+
+      const foundReadMessage = foundConvo.messages.find(
+        (message) =>
+          message.senderId !== foundConvo.otherUser.id && message.readStatus
+      );
+
+      if (!foundReadMessage) return;
+
+      dispatch(setReadMessageId(foundConvo.id, foundReadMessage.id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+export const initializeReadMessageIdHandler =
+  (conversation) => async (dispatch) => {
+    try {
+      let foundMessage = conversation.messages.find(
+        (message) =>
+          message.senderId !== conversation.otherUser.id && message.readStatus
+      );
+
+      if (!foundMessage) return;
+
+      dispatch(setReadMessageId(conversation.id, foundMessage.id));
     } catch (error) {
       console.error(error);
     }

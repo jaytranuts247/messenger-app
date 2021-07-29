@@ -1,10 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Grid } from "@material-ui/core";
 import { SenderBubble, OtherUserBubble } from "../ActiveChat";
 import moment from "moment";
+import { connect } from "react-redux";
+
+const getReadMessageId = (readMessages, conversationId) => {
+  if (!conversationId) return 0;
+  let readMessage = readMessages.find(
+    (msg) => msg.conversationId === conversationId
+  );
+  if (!readMessage) return 0;
+
+  return readMessage.readMessageId;
+};
 
 const Messages = (props) => {
-  const { messages, otherUser, userId, isTyping, readMessageId } = props;
+  const [readMessageId, setReadMessageId] = useState(0);
+  const {
+    messages,
+    otherUser,
+    userId,
+    isTyping,
+    conversationId,
+    readMessages,
+  } = props;
+
+  useEffect(() => {
+    if (!readMessages) return;
+    setReadMessageId(getReadMessageId(readMessages, conversationId));
+  }, [readMessages, conversationId]);
 
   return (
     <Grid container direction="column-reverse">
@@ -45,4 +69,8 @@ const Messages = (props) => {
   );
 };
 
-export default Messages;
+const mapStateToProps = (state) => ({
+  readMessages: state.readMessages,
+});
+
+export default connect(mapStateToProps, null)(Messages);

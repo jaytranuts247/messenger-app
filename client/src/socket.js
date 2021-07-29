@@ -7,7 +7,10 @@ import {
   setReadMessage,
   setIsTyping,
 } from "./store/conversations";
-import { updateMessageStatusHandler } from "./store/utils/thunkCreators";
+import {
+  setReadMessageIdHandler,
+  updateMessageStatusHandler,
+} from "./store/utils/thunkCreators";
 import { incrementUnReadMessage } from "./store/unReadMessages";
 
 const socket = io(window.location.origin);
@@ -51,6 +54,12 @@ socket.on("connect", () => {
 
   socket.on("read-message", async (data) => {
     store.dispatch(setReadMessage(data.senderId, data.conversationId));
+    store.dispatch(
+      setReadMessageIdHandler(
+        store.getState().conversations,
+        data.conversationId
+      )
+    );
   });
 
   // { isTyping, senderId, recipientId, conversationId }

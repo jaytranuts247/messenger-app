@@ -5,7 +5,10 @@ import { withStyles } from "@material-ui/core/styles";
 import { setActiveChat } from "../../store/activeConversation";
 import { connect } from "react-redux";
 
-import { updateMessageStatusHandler } from "../../store/utils/thunkCreators";
+import {
+  initializeReadMessageIdHandler,
+  updateMessageStatusHandler,
+} from "../../store/utils/thunkCreators";
 import { resetUnReadMessage } from "../../store/unReadMessages";
 
 const styles = {
@@ -23,6 +26,11 @@ const styles = {
 };
 
 class Chat extends Component {
+  componentDidMount() {
+    if (!this.props.conversation) return;
+    this.props.initializeReadMessageIdHandler(this.props.conversation);
+  }
+
   handleClick = async (conversation) => {
     await this.props.setActiveChat(conversation.otherUser.username);
 
@@ -87,6 +95,8 @@ const mapDispatchToProps = (dispatch) => {
       ),
     resetUnReadMessage: (conversationId) =>
       dispatch(resetUnReadMessage(conversationId)),
+    initializeReadMessageIdHandler: (conversation) =>
+      dispatch(initializeReadMessageIdHandler(conversation)),
   };
 };
 

@@ -63,16 +63,14 @@ router.patch("/read", async (req, res, next) => {
     // check if activeConversationId is exist
     if (!activeConversationId) return res.sendStatus(400);
 
-    let conversation = await Conversation.findConversationById(
-      activeConversationId,
-      senderId,
-      req.user.id
-    );
+    let conversation = await Conversation.findByPk(activeConversationId);
 
     // if not found conversation return error
     if (!conversation) return res.sendStatus(404);
+    if (conversation.user1Id !== senderId && conversation.user2Id !== senderId)
+      return res.sendStatus(404);
 
-    let updatedMessages = await Message.update(
+    await Message.update(
       { readStatus: true },
       {
         where: {
@@ -86,8 +84,6 @@ router.patch("/read", async (req, res, next) => {
         },
       }
     );
-
-    console.log(updatedMessages);
 
     return res.sendStatus(204);
   } catch (error) {

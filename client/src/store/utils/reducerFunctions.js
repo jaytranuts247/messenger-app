@@ -175,3 +175,26 @@ export const resetUnReadMessageToStore = (state, conversationId) => {
     return convo;
   });
 };
+
+// { conversationId, readMessageId }
+export const setReadMessageIdToStore = (state, payload) => {
+  const { conversationId, readMessageId } = payload;
+
+  const foundReadMessage = state.find(
+    (convo) => convo.conversationId === conversationId
+  );
+
+  if (!foundReadMessage) {
+    return [{ conversationId, readMessageId }, ...state];
+  }
+
+  return state.map((convo) => {
+    if (convo.conversationId === conversationId) {
+      let newConvo = { ...convo };
+
+      newConvo.readMessageId = readMessageId;
+      return newConvo;
+    }
+    return convo;
+  });
+};
