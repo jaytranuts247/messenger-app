@@ -1,21 +1,13 @@
 import React from "react";
-import { Box } from "@material-ui/core";
+import { Grid } from "@material-ui/core";
 import { SenderBubble, OtherUserBubble } from "../ActiveChat";
 import moment from "moment";
-import { makeStyles } from "@material-ui/core/styles";
-
-const useStyles = makeStyles(() => ({
-  root: {
-    display: "flex",
-    flexDirection: "column-reverse"
-  }
-}));
 
 const Messages = (props) => {
   const { messages, otherUser, userId } = props;
-  const classes = useStyles();
+
   return (
-    <Box className={classes.root}>
+    <Grid container direction="column-reverse">
       {messages.map((message) => {
         const time = moment(message.createdAt).format("h:mm");
 
@@ -30,7 +22,7 @@ const Messages = (props) => {
           />
         );
       })}
-    </Box>
+    </Grid>
   );
 };
 
