@@ -46,8 +46,8 @@ class Chat extends Component {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    setActiveChat: (id) => {
-      dispatch(setActiveChat(id));
+    setActiveChat: (username) => {
+      dispatch(setActiveChat(username));
     },
   };
 };
