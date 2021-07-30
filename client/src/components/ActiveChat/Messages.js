@@ -24,7 +24,7 @@ const Messages = (props) => {
     conversationId,
     readMessages,
   } = props;
-
+  
   useEffect(() => {
     if (!readMessages) return;
     setReadMessageId(getReadMessageId(readMessages, conversationId));
