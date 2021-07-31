@@ -1,5 +1,5 @@
 import axios from "axios";
-import socket from "../../socket";
+import { socket, socketID } from "../../socket";
 import {
   gotConversations,
   addConversation,
@@ -8,6 +8,7 @@ import {
   setReadMessage,
 } from "../conversations";
 import { setReadMessageId } from "../readMessages";
+import { incrementUnReadMessage, resetUnReadMessage } from "../unReadMessages";
 import { gotUser, setFetchingStatus } from "../user";
 
 axios.interceptors.request.use(async function (config) {
@@ -25,7 +26,7 @@ export const fetchUser = () => async (dispatch) => {
     const { data } = await axios.get("/auth/user");
     dispatch(gotUser(data));
     if (data.id) {
-      socket.emit("go-online", data.id);
+      socket.emit("go-online", { id: data.id, socketID });
     }
   } catch (error) {
     console.error(error);
@@ -38,8 +39,11 @@ export const register = (credentials) => async (dispatch) => {
   try {
     const { data } = await axios.post("/auth/register", credentials);
     await localStorage.setItem("messenger-token", data.token);
+    await localStorage.setItem("sessionID", data.sessionID);
+    socket.auth = { sessionID: data.sessionID };
+    socket.userId = data.id;
     dispatch(gotUser(data));
-    socket.emit("go-online", data.id);
+    socket.emit("go-online", { id: data.id, socketID });
   } catch (error) {
     console.error(error);
     dispatch(gotUser({ error: error.response.data.error || "Server Error" }));
@@ -50,8 +54,11 @@ export const login = (credentials) => async (dispatch) => {
   try {
     const { data } = await axios.post("/auth/login", credentials);
     await localStorage.setItem("messenger-token", data.token);
+    await localStorage.setItem("sessionID", data.sessionID);
+    socket.auth = { sessionID: data.sessionID };
+    socket.userId = data.id;
     dispatch(gotUser(data));
-    socket.emit("go-online", data.id);
+    socket.emit("go-online", { id: data.id, socketID });
   } catch (error) {
     console.error(error);
     dispatch(gotUser({ error: error.response.data.error || "Server Error" }));
@@ -194,6 +201,27 @@ export const initializeReadMessageIdHandler =
       if (!foundMessage) return;
 
       dispatch(setReadMessageId(conversation.id, foundMessage.id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+export const unreadMessageHandler =
+  (conversationId, conversations, activeConversation) => (dispatch) => {
+    try {
+      // no avtiveconversation, increment unread message
+      if (activeConversation !== "") {
+        return dispatch(incrementUnReadMessage(conversationId));
+      }
+
+      // if active converesation found, then find convo and reset
+      let foundConversation = conversations.find(
+        (convo) => convo.otherUser.username === activeConversation
+      );
+
+      if (foundConversation.id === conversationId)
+        return dispatch(resetUnReadMessage(foundConversation.id));
+      else return dispatch(incrementUnReadMessage(conversationId));
     } catch (error) {
       console.error(error);
     }

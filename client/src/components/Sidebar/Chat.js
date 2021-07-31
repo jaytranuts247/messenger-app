@@ -34,6 +34,8 @@ class Chat extends Component {
   handleClick = async (conversation) => {
     await this.props.setActiveChat(conversation.otherUser.username);
 
+    this.props.resetUnReadMessage(this.props.conversation.id);
+
     // if there is no conversation Id, no need to process and send read status
     if (!this.props.conversation.id) return;
 
@@ -43,7 +45,6 @@ class Chat extends Component {
       this.props.conversation.id,
       this.props.conversation.otherUser.id
     );
-    this.props.resetUnReadMessage(this.props.conversation.id);
   };
 
   render() {

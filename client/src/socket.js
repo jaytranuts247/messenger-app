@@ -9,14 +9,29 @@ import {
 } from "./store/conversations";
 import {
   setReadMessageIdHandler,
+  unreadMessageHandler,
   updateMessageStatusHandler,
 } from "./store/utils/thunkCreators";
-import { incrementUnReadMessage } from "./store/unReadMessages";
+import {
+  incrementUnReadMessage,
+  resetUnReadMessage,
+} from "./store/unReadMessages";
 
 const socket = io(window.location.origin);
+var socketID = null;
 
 socket.on("connect", () => {
   console.log("connected to server");
+  console.log("socket handshake", socket.handshake, socket.id);
+
+  if (!socketID || socketID !== socket.id) {
+    console.log("register socketID");
+    socket.emit("socketID-register", {
+      id: store.getState().user.id,
+      socketID: socket.id,
+    });
+    socketID = socket.id;
+  }
 
   socket.on("add-online-user", (id) => {
     store.dispatch(addOnlineUser(id));
@@ -28,7 +43,7 @@ socket.on("connect", () => {
 
   socket.on("new-message", (data) => {
     const { user, activeConversation, conversations } = store.getState();
-
+    console.log("on receive new message");
     // if not recipient, return
     if (user.id !== data.recipientId) return;
 
@@ -38,9 +53,14 @@ socket.on("connect", () => {
     // remove typing indicator on new message receive
     store.dispatch(setIsTyping(data.message.conversationId, false));
 
-    // increment unReadMessageCount
-    store.dispatch(incrementUnReadMessage(data.message.conversationId));
-
+    // update unread Message count
+    store.dispatch(
+      unreadMessageHandler(
+        data.message.conversationId,
+        conversations,
+        activeConversation
+      )
+    );
     // emit read-message
     store.dispatch(
       updateMessageStatusHandler(
@@ -53,6 +73,7 @@ socket.on("connect", () => {
   });
 
   socket.on("read-message", async (data) => {
+    console.log("on read message");
     store.dispatch(setReadMessage(data.senderId, data.conversationId));
     store.dispatch(
       setReadMessageIdHandler(
@@ -69,4 +90,13 @@ socket.on("connect", () => {
   });
 });
 
-export default socket;
+socket.on("reconnect", (attempt) => {
+  console.log("reconnect attempt", attempt);
+});
+
+socket.on("disconnect", () => {
+  console.log("client socket disconnect");
+  // try to reconnect
+});
+
+export { socket, socketID };
