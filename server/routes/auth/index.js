@@ -1,9 +1,10 @@
 const router = require("express").Router();
+const sessionMiddleware = require("../../middlewares/sessionMiddleware");
 const { User } = require("../../db/models");
 const jwt = require("jsonwebtoken");
 const joiValidator = require("../../middlewares/joiValidator");
 const joiSchemas = require("../../middlewares/joiSchemas");
-
+const sessionStorage = require("../../app");
 router.post(
   "/register",
   joiValidator(joiSchemas.userRegister, "body"),
@@ -26,6 +27,13 @@ router.post(
 
       const user = await User.create(req.body);
 
+      req.session.user = user;
+      req.session.save((err) => {
+        if (err) console.log(err);
+      });
+      let sessionID = req.sessionID;
+      console.log(sessionID);
+
       const token = jwt.sign(
         { id: user.dataValues.id },
         process.env.SESSION_SECRET,
@@ -34,6 +42,7 @@ router.post(
       res.json({
         ...user.dataValues,
         token,
+        sessionID,
       });
     } catch (error) {
       if (error.name === "SequelizeUniqueConstraintError") {
@@ -45,46 +54,45 @@ router.post(
   }
 );
 
-router.post(
-  "/login",
-  joiValidator(joiSchemas.userLogin, "body"),
-  async (req, res, next) => {
-    try {
-      // expects username and password in req.body
-      const { username, password } = req.body;
-      if (!username || !password)
-        return res
-          .status(400)
-          .json({ error: "Username and password required" });
+router.post("/login", async (req, res, next) => {
+  try {
+    // expects username and password in req.body
+    console.log("login");
+    const { username, password } = req.body;
+    if (!username || !password)
+      return res.status(400).json({ error: "Username and password required" });
 
-      const user = await User.findOne({
-        where: {
-          username: req.body.username,
-        },
+    const user = await User.findOne({
+      where: {
+        username: req.body.username,
+      },
+    });
+
+    if (!user) {
+      console.log({ error: `No user found for username: ${username}` });
+      res.status(401).json({ error: "Wrong username and/or password" });
+    } else if (!user.correctPassword(password)) {
+      console.log({ error: "Wrong username and/or password" });
+      res.status(401).json({ error: "Wrong username and/or password" });
+    } else {
+      // let sessions = sessionStorage.all((err, sessions) => {
+      //   if (err) console.log(err);
+      //   if (sessions) console.log(sessions);
+      // });
+      const token = jwt.sign(
+        { id: user.dataValues.id },
+        process.env.SESSION_SECRET,
+        { expiresIn: 86400 }
+      );
+      res.json({
+        ...user.dataValues,
+        token,
       });
-
-      if (!user) {
-        console.log({ error: `No user found for username: ${username}` });
-        res.status(401).json({ error: "Wrong username and/or password" });
-      } else if (!user.correctPassword(password)) {
-        console.log({ error: "Wrong username and/or password" });
-        res.status(401).json({ error: "Wrong username and/or password" });
-      } else {
-        const token = jwt.sign(
-          { id: user.dataValues.id },
-          process.env.SESSION_SECRET,
-          { expiresIn: 86400 }
-        );
-        res.json({
-          ...user.dataValues,
-          token,
-        });
-      }
-    } catch (error) {
-      next(error);
     }
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 router.delete("/logout", (req, res, next) => {
   res.sendStatus(204);

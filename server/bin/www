@@ -7,10 +7,15 @@ require("dotenv").config();
  * Module dependencies.
  */
 
-const { app, sessionStore } = require("../app");
+const { app, sessionStore, expressSession } = require("../app");
 const http = require("http");
 const db = require("../db");
 const onlineUsers = require("../onlineUsers");
+const cookieParser = require("cookie-parser");
+const sharedsession = require("express-socket.io-session");
+
+const wrap = (middleware) => (socket, next) =>
+  middleware(socket.request, {}, next);
 
 /**
  * Get port from environment and store in Express.
@@ -31,25 +36,135 @@ const server = http.createServer(app);
 
 const io = require("socket.io")(server);
 
-io.on("connection", (socket) => {
-  socket.on("go-online", (id) => {
-    if (!onlineUsers.includes(id)) {
-      onlineUsers.push(id);
+io.use(wrap(expressSession));
+
+// io.use(async (socket, next) => {
+//   const sessionID = socket.handshake.auth.sessionID;
+
+//   // console.log(
+//   //   "sessionID",
+//   //   sessionID,
+//   //   socket.request.session,
+//   //   socket.handshake.headers.cookie,
+//   //   socket.handshake.session,
+//   //   socket.handshake.session.user,
+//   //   socket.handshake.session.id
+//   // );
+
+//   const scks = await io.sockets;
+//   console.log("scks", scks);
+//   io.sockets.sockets.forEach((socket, key) => {
+//     console.log("socketssss", socket);
+//   });
+//   if (sessionID) {
+//     // find existing session
+//     const session = Session.findOne({
+//       where: {
+//         sid: sessionID,
+//       },
+//     });
+//     console.log("sessions found ", session);
+//     if (session) {
+//       socket.sessionID = sessionID;
+//       socket.userID = session.userID;
+//       socket.username = session.username;
+//       return next();
+//     }
+//   }
+//   const username = socket.handshake.auth.username;
+
+//   if (!username) {
+//     return next(new Error("invalid username"));
+//   }
+//   // create new session
+//   socket.sessionID = randomId();
+//   socket.userID = randomId();
+//   socket.username = username;
+//   next();
+// });
+
+io.on("connection", async (socket) => {
+  // console.log(
+  //   "socket request session",
+  //   socket.request.session,
+  //   "handshake",
+  //   socket.handshake.session,
+  //   "session id",
+  //   socket.handshake.session.sessionID,
+  //   socket.handshake.session.cookie,
+  //   cookieParser.JSONCookie(socket.handshake.session.cookie)
+  // );
+  io.sockets.sockets.forEach((socket, key) => {
+    console.log("socketssss", socket);
+  });
+  console.log(io.sockets.sockets.keys());
+
+  for (let [key, value] of io.sockets.sockets) {
+    console.log("key", key, "value", value);
+  }
+  // console.log(
+  //   "socket.request.session",
+  //   socket.request,
+  //   socket.request.session,
+  //   socket.request.session.id
+  // );
+
+  socket.on("socketID-register", (data) => {
+    console.log("register socketID", data);
+    const foundOnlineUser = onlineUsers.find(
+      (onlineUser) => onlineUser.id === data.id
+    );
+
+    if (foundOnlineUser) {
+      onlineUsers.forEach((onlineUser) => {
+        if (onlineUser.id === data.id) {
+          if (!onlineUser.socketId || onlineUser.socketID !== data.socketID)
+            onlineUser.socketID = data.socketID;
+        }
+      });
+    } else {
+      onlineUsers.push({ ...data });
     }
+    console.log(onlineUsers);
+  });
+
+  socket.on("go-online", (data) => {
+    const foundOnlineUser = onlineUsers.find(
+      (onlineUser) => onlineUser.id === data.id
+    );
+    if (!foundOnlineUser) onlineUsers.push(data);
+
     // send the user who just went online to everyone else who is already online
-    socket.broadcast.emit("add-online-user", id);
+    socket.broadcast.emit("add-online-user", data.id);
   });
 
   socket.on("new-message", (data) => {
-    socket.broadcast.emit("new-message", {
-      message: data.message,
-      sender: data.sender,
-      recipientId: data.recipientId,
-    });
+    // socket.broadcast.emit("new-message", {
+    //   message: data.message,
+    //   sender: data.sender,
+    //   recipientId: data.recipientId,
+    // });
+    let recipient = onlineUsers.find(
+      (onlineUser) => onlineUser.id === data.recipientId
+    );
+    if (recipient && recipient.socketID) {
+      console.log("emit new message");
+      io.to(recipient.socketID).emit("new-message", {
+        message: data.message,
+        sender: data.sender,
+        recipientId: data.recipientId,
+      });
+    }
   });
 
   socket.on("read-message", (data) => {
-    socket.broadcast.emit("read-message", data);
+    // find online user
+    const foundUser = onlineUsers.find(
+      (onlineUser) => onlineUser.id === data.senderId
+    );
+    // if user online, then send the read messge status
+    if (foundUser) io.to(foundUser.socketID).emit("read-message", data);
+    // socket.broadcast.emit("read-message", data);
   });
 
   socket.on("logout", (id) => {

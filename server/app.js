@@ -1,5 +1,6 @@
 const createError = require("http-errors");
 const express = require("express");
+// const cookieParser = require("cookie-parser");
 const { join } = require("path");
 const logger = require("morgan");
 const jwt = require("jsonwebtoken");
@@ -7,17 +8,34 @@ const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const db = require("./db");
 const { User } = require("./db/models");
+
 // create store for sessions to persist in database
-const sessionStore = new SequelizeStore({ db });
+const sessionStore = new SequelizeStore({
+  db,
+  checkExpirationInterval: 15 * 60 * 1000,
+  expiration: 2 * 60 * 60 * 1000,
+});
+
+const expressSession = session({
+  secret: process.env.SESSION_SECRET,
+  saveUninitialized: false,
+  store: sessionStore,
+  resave: false,
+  proxy: true,
+  cookie: { maxAge: 720000 }, // 2 hours
+});
 
 const { json, urlencoded } = express;
 
 const app = express();
 
 app.use(logger("dev"));
+// app.use(cookieParser);
 app.use(json());
 app.use(urlencoded({ extended: false }));
 app.use(express.static(join(__dirname, "public")));
+
+app.use(expressSession);
 
 app.use(function (req, res, next) {
   const token = req.headers["x-access-token"];
@@ -59,4 +77,4 @@ app.use(function (err, req, res, next) {
   res.json({ error: err });
 });
 
-module.exports = { app, sessionStore };
+module.exports = { app, sessionStore, expressSession };
