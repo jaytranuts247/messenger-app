@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import { postMessage } from "../../store/utils/thunkCreators";
 import socket from "../../socket";
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(() => ({
   root: {
     justifySelf: "flex-end",
     marginTop: 15,
@@ -16,7 +16,7 @@ const useStyles = makeStyles({
     borderRadius: 8,
     marginBottom: 20,
   },
-});
+}));
 
 const Input = ({
   user,

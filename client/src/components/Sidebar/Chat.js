@@ -11,7 +11,7 @@ import {
 } from "../../store/utils/thunkCreators";
 import { resetUnReadMessage } from "../../store/unReadMessages";
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(() => ({
   root: {
     borderRadius: 8,
     height: 80,
@@ -23,7 +23,7 @@ const useStyles = makeStyles({
       cursor: "grab",
     },
   },
-});
+}));
 
 const Chat = ({
   user,

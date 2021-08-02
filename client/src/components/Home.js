@@ -9,12 +9,12 @@ import { logout, fetchConversations } from "../store/utils/thunkCreators";
 import { clearOnLogout } from "../store/index";
 import { useEffect } from "react/cjs/react.development";
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(() => ({
   root: {
     height: "97vh",
   },
   logout: {},
-});
+}));
 
 const Home = ({ user, fetchConversations, logout }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
