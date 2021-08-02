@@ -1,8 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { Grid } from "@material-ui/core";
+import React, { useState, useEffect, useRef } from "react";
+import { Box, Grid } from "@material-ui/core";
 import { SenderBubble, OtherUserBubble } from "../ActiveChat";
 import moment from "moment";
 import { connect } from "react-redux";
+import { makeStyles } from "@material-ui/core/styles";
+
+const useStyles = makeStyles(() => ({
+  gridContainer: {
+    overflowY: "scroll",
+    flexWrap: "nowrap",
+  },
+}));
 
 const getReadMessageId = (readMessages, conversationId) => {
   if (!conversationId) return 0;
@@ -15,7 +23,9 @@ const getReadMessageId = (readMessages, conversationId) => {
 };
 
 const Messages = (props) => {
+  const classes = useStyles();
   const [readMessageId, setReadMessageId] = useState(0);
+  const messageEndRef = useRef();
   const {
     messages,
     otherUser,
@@ -25,13 +35,25 @@ const Messages = (props) => {
     readMessages,
   } = props;
 
+  const scrollToBottom = () => {
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   useEffect(() => {
     if (!readMessages) return;
     setReadMessageId(getReadMessageId(readMessages, conversationId));
   }, [readMessages, conversationId]);
 
   return (
-    <Grid container direction="column-reverse">
+    <Grid
+      container
+      direction="column-reverse"
+      className={classes.gridContainer}
+    >
       {isTyping && (
         <Grid item>
           <OtherUserBubble
@@ -62,6 +84,7 @@ const Messages = (props) => {
                 otherUser={otherUser}
               />
             )}
+            <Box ref={messageEndRef}></Box>
           </Grid>
         );
       })}

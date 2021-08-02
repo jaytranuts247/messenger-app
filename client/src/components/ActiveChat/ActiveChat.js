@@ -1,6 +1,6 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Box } from "@material-ui/core";
+import { Box, Hidden } from "@material-ui/core";
 import { Input, Header, Messages } from "./index";
 import { connect } from "react-redux";
 
@@ -9,6 +9,8 @@ const useStyles = makeStyles(() => ({
     display: "flex",
     flexGrow: 8,
     flexDirection: "column",
+    height: "100%",
+    maxHeight: "100%",
   },
   chatContainer: {
     marginLeft: 41,
@@ -16,7 +18,9 @@ const useStyles = makeStyles(() => ({
     display: "flex",
     flexDirection: "column",
     flexGrow: 1,
+    height: "100%",
     justifyContent: "flex-end",
+    overflow: "auto",
   },
 }));
 

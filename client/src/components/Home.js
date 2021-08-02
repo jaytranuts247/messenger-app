@@ -1,5 +1,5 @@
-import React, { Component } from "react";
-import { withStyles } from "@material-ui/core/styles";
+import React, { useState } from "react";
+import { makeStyles } from "@material-ui/core/styles";
 import { Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { Grid, CssBaseline, Button } from "@material-ui/core";
@@ -7,59 +7,56 @@ import { SidebarContainer } from "./Sidebar";
 import { ActiveChat } from "./ActiveChat";
 import { logout, fetchConversations } from "../store/utils/thunkCreators";
 import { clearOnLogout } from "../store/index";
+import { useEffect } from "react/cjs/react.development";
 
-const styles = {
+const useStyles = makeStyles({
   root: {
     height: "97vh",
   },
-};
+  logout: {},
+});
 
-class Home extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isLoggedIn: false,
-    };
-  }
+const Home = ({ user, fetchConversations, logout }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const classes = useStyles();
 
-  componentDidUpdate(prevProps) {
-    if (this.props.user.id !== prevProps.user.id) {
-      this.setState({
-        isLoggedIn: true,
-      });
-    }
-  }
+  useEffect(() => {
+    if (!user) return;
+    setIsLoggedIn(true);
+  }, [user.id, user, setIsLoggedIn]);
 
-  componentDidMount() {
-    this.props.fetchConversations();
-  }
+  useEffect(() => {
+    fetchConversations();
+  }, []);
 
-  handleLogout = async () => {
-    await this.props.logout(this.props.user.id);
+  const handleLogout = async () => {
+    await logout(user.id);
   };
 
-  render() {
-    const { classes } = this.props;
-    if (!this.props.user.id) {
-      // If we were previously logged in, redirect to login instead of register
-      if (this.state.isLoggedIn) return <Redirect to="/login" />;
-      return <Redirect to="/register" />;
-    }
-    return (
-      <>
-        {/* logout button will eventually be in a dropdown next to username */}
-        <Button className={classes.logout} onClick={this.handleLogout}>
-          Logout
-        </Button>
-        <Grid container component="main" className={classes.root}>
-          <CssBaseline />
-          <SidebarContainer />
-          <ActiveChat />
-        </Grid>
-      </>
-    );
-  }
-}
+  return (
+    <>
+      {!user.id ? (
+        isLoggedIn ? (
+          <Redirect to="/login" />
+        ) : (
+          <Redirect to="/register" />
+        )
+      ) : (
+        <>
+          {/* logout button will eventually be in a dropdown next to username */}
+          <Button className={classes.logout} onClick={handleLogout}>
+            Logout
+          </Button>
+          <Grid container component="main" className={classes.root}>
+            <CssBaseline />
+            <SidebarContainer />
+            <ActiveChat />
+          </Grid>
+        </>
+      )}
+    </>
+  );
+};
 
 const mapStateToProps = (state) => {
   return {
@@ -80,7 +77,4 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(withStyles(styles)(Home));
+export default connect(mapStateToProps, mapDispatchToProps)(Home);
