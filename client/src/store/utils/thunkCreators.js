@@ -42,7 +42,7 @@ export const register = (credentials) => async (dispatch) => {
 
     // session
     await localStorage.setItem("sessionID", data.sessionID);
-    socket.auth = { sessionID: data.sessionID };
+    socket.auth = { sessionID: data.sessionID, token: data.token };
     socket.userId = data.userId;
 
     dispatch(gotUser(data));
@@ -60,7 +60,7 @@ export const login = (credentials) => async (dispatch) => {
 
     // session
     await localStorage.setItem("sessionID", data.sessionID);
-    socket.auth = { sessionID: data.sessionID };
+    socket.auth = { sessionID: data.sessionID, token: data.token };
     socket.userId = data.userId;
 
     dispatch(gotUser(data));

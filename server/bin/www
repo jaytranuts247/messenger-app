@@ -13,6 +13,7 @@ const db = require("../db");
 const onlineUsers = require("../onlineUsers");
 const cookieParser = require("cookie-parser");
 const clientSocketInfo = require("../clientSocketInfo");
+const jwt = require("jsonwebtoken");
 /**
  * Get port from environment and store in Express.
  */
@@ -36,6 +37,18 @@ const wrap = (middleware) => (socket, next) =>
   middleware(socket.request, {}, next);
 
 io.use(wrap(expressSession));
+
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (token) {
+    jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
+      if (err) return next(new Error("not authorized"));
+      return next();
+    });
+  }
+
+  return next(new Error("not authorized"));
+});
 
 io.on("connection", (socket) => {
   console.log("socket server connected");
@@ -80,7 +93,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("read-message", (data) => {
-    if (clientSocketInfo.has(data.recipientId)) {
+    if (clientSocketInfo.has(data.senderId)) {
       io.to(clientSocketInfo.get(data.senderId).socketId).emit(
         "read-message",
         data

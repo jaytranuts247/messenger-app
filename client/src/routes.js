@@ -5,6 +5,10 @@ import { fetchUser } from "./store/utils/thunkCreators";
 import Signup from "./Signup.js";
 import Login from "./Login.js";
 import { Home, SnackbarError } from "./components";
+import { setSocketAuthToken } from "./store/utils/setSocketAuthToken";
+
+// set socket token to auth
+setSocketAuthToken();
 
 const Routes = (props) => {
   const { user, fetchUser } = props;

@@ -125,6 +125,14 @@ socket.io.on("reconnect", (attempt) => {
 
 socket.on("disconnect", (reason) => {
   console.log("reason for disconnect: ", reason);
+
+  // remove old listeners
+  socket.removeAllListeners("new-message");
+  socket.removeAllListeners("read-message");
+  socket.removeAllListeners("logout");
+  socket.removeAllListeners("is-typing");
+  socket.removeAllListeners("disconnect");
+  io.removeAllListeners("connection");
 });
 
 export default socket;
