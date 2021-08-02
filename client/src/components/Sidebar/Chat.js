@@ -34,16 +34,17 @@ class Chat extends Component {
   handleClick = async (conversation) => {
     await this.props.setActiveChat(conversation.otherUser.username);
 
+    this.props.resetUnReadMessage(this.props.conversation.id);
+
     // if there is no conversation Id, no need to process and send read status
     if (!this.props.conversation.id) return;
-
     this.props.updateMessageStatusHandler(
       this.props.activeConversation,
       this.props.conversations,
       this.props.conversation.id,
-      this.props.conversation.otherUser.id
+      this.props.conversation.otherUser.id,
+      this.props.user.id
     );
-    this.props.resetUnReadMessage(this.props.conversation.id);
   };
 
   render() {
@@ -69,6 +70,7 @@ class Chat extends Component {
 
 const mapStateToProps = (state) => {
   return {
+    user: state.user,
     conversations: state.conversations,
     activeConversation: state.activeConversation,
   };
@@ -83,14 +85,16 @@ const mapDispatchToProps = (dispatch) => {
       activeConversation,
       conversations,
       conversationId,
-      senderId
+      senderId,
+      recipientId
     ) =>
       dispatch(
         updateMessageStatusHandler(
           activeConversation,
           conversations,
           conversationId,
-          senderId
+          senderId,
+          recipientId
         )
       ),
     resetUnReadMessage: (conversationId) =>

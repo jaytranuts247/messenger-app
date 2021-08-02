@@ -26,9 +26,15 @@ router.post("/register", async (req, res, next) => {
       process.env.SESSION_SECRET,
       { expiresIn: 86400 }
     );
+
+    // create session and save to db
+    req.session.userId = user.id;
+    req.session.save();
+
     res.json({
       ...user.dataValues,
       token,
+      sessionID: req.session.id,
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
@@ -64,10 +70,30 @@ router.post("/login", async (req, res, next) => {
         process.env.SESSION_SECRET,
         { expiresIn: 86400 }
       );
-      res.json({
-        ...user.dataValues,
-        token,
-      });
+
+      // if session exist, regenerate new one, if not - create new one
+      if (req.sessionID) {
+        req.session.regenerate((err) => {
+          if (!err) {
+            req.session.userId = user.id;
+            return res.json({
+              ...user.dataValues,
+              token,
+              sessionID: req.session.id,
+            });
+          }
+        });
+      } else {
+        req.session.userId = user.id;
+        req.session.save((err) => {
+          if (!err)
+            return res.json({
+              ...user.dataValues,
+              token,
+              sessionID: req.session.id,
+            });
+        });
+      }
     }
   } catch (error) {
     next(error);

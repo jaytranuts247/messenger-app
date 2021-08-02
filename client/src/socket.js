@@ -1,4 +1,4 @@
-import io from "socket.io-client";
+import { io } from "socket.io-client";
 import store from "./store";
 import {
   setNewMessage,
@@ -9,14 +9,45 @@ import {
 } from "./store/conversations";
 import {
   setReadMessageIdHandler,
+  unreadMessageHandler,
   updateMessageStatusHandler,
 } from "./store/utils/thunkCreators";
-import { incrementUnReadMessage } from "./store/unReadMessages";
 
-const socket = io(window.location.origin);
+const socket = io(window.location.origin, {
+  reconnection: false,
+  autoConnect: true,
+});
+export var socketId = null;
+
+const tryReconnect = () => {
+  setTimeout(() => {
+    socket.io.open((err) => {
+      if (err) {
+        tryReconnect();
+      }
+    });
+  }, 2000);
+};
+
+socket.io.on("close", tryReconnect);
 
 socket.on("connect", () => {
   console.log("connected to server");
+  socketId = socket.id;
+
+  if (store.getState().user && socket.id) {
+    socket.emit("update-socketId", {
+      userId: store.getState().user.id,
+      socketId: socket.id,
+    });
+  }
+
+  socket.on("socketId-collect", () => {
+    socket.emit("update-socketId", {
+      userId: store.getState().user.id,
+      socketId: socket.id,
+    });
+  });
 
   socket.on("add-online-user", (id) => {
     store.dispatch(addOnlineUser(id));
@@ -35,11 +66,17 @@ socket.on("connect", () => {
     //  update new message
     store.dispatch(setNewMessage(data.message, data.sender));
 
-    // remove typing indicator on new message receive
+    // remove typing indicator on new   message receive
     store.dispatch(setIsTyping(data.message.conversationId, false));
 
-    // increment unReadMessageCount
-    store.dispatch(incrementUnReadMessage(data.message.conversationId));
+    // handle unreadMessaages
+    store.dispatch(
+      unreadMessageHandler(
+        data.message.conversationId,
+        conversations,
+        activeConversation
+      )
+    );
 
     // emit read-message
     store.dispatch(
@@ -47,7 +84,8 @@ socket.on("connect", () => {
         activeConversation,
         conversations,
         data.message.conversationId,
-        data.message.senderId
+        data.message.senderId,
+        data.recipientId
       )
     );
   });
@@ -67,6 +105,26 @@ socket.on("connect", () => {
     const { conversationId, isTyping } = data;
     store.dispatch(setIsTyping(conversationId, isTyping));
   });
+});
+
+socket.on("connect_error", (err) => {
+  console.log(`received erorr message "${err.message}" from server`);
+  // error: not authorzied -> logout
+  // error: not authorzied -> logout
+});
+
+socket.io.on("reconnect", (attempt) => {
+  console.log("on reconnect");
+  if (store.getState().user && socket.id) {
+    socket.emit("update-socketId", {
+      userId: store.getState().user.id,
+      socketId: socket.id,
+    });
+  }
+});
+
+socket.on("disconnect", (reason) => {
+  console.log("reason for disconnect: ", reason);
 });
 
 export default socket;

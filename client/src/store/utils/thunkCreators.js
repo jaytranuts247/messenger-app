@@ -1,5 +1,5 @@
 import axios from "axios";
-import socket from "../../socket";
+import socket, { socketId } from "../../socket";
 import {
   gotConversations,
   addConversation,
@@ -8,6 +8,7 @@ import {
   setReadMessage,
 } from "../conversations";
 import { setReadMessageId } from "../readMessages";
+import { incrementUnReadMessage, resetUnReadMessage } from "../unReadMessages";
 import { gotUser, setFetchingStatus } from "../user";
 
 axios.interceptors.request.use(async function (config) {
@@ -25,7 +26,7 @@ export const fetchUser = () => async (dispatch) => {
     const { data } = await axios.get("/auth/user");
     dispatch(gotUser(data));
     if (data.id) {
-      socket.emit("go-online", data.id);
+      socket.emit("go-online", { id: data.id, socketId });
     }
   } catch (error) {
     console.error(error);
@@ -38,8 +39,14 @@ export const register = (credentials) => async (dispatch) => {
   try {
     const { data } = await axios.post("/auth/register", credentials);
     await localStorage.setItem("messenger-token", data.token);
+
+    // session
+    await localStorage.setItem("sessionID", data.sessionID);
+    socket.auth = { sessionID: data.sessionID };
+    socket.userId = data.userId;
+
     dispatch(gotUser(data));
-    socket.emit("go-online", data.id);
+    socket.emit("go-online", { id: data.id, socketId });
   } catch (error) {
     console.error(error);
     dispatch(gotUser({ error: error.response.data.error || "Server Error" }));
@@ -50,8 +57,14 @@ export const login = (credentials) => async (dispatch) => {
   try {
     const { data } = await axios.post("/auth/login", credentials);
     await localStorage.setItem("messenger-token", data.token);
+
+    // session
+    await localStorage.setItem("sessionID", data.sessionID);
+    socket.auth = { sessionID: data.sessionID };
+    socket.userId = data.userId;
+
     dispatch(gotUser(data));
-    socket.emit("go-online", data.id);
+    socket.emit("go-online", { id: data.id, socketId });
   } catch (error) {
     console.error(error);
     dispatch(gotUser({ error: error.response.data.error || "Server Error" }));
@@ -128,15 +141,16 @@ export const updateMessageStatus = async (senderId, activeConversationId) => {
   return data;
 };
 
-const sendReadMessageStatus = (senderId, conversationId) => {
+const sendReadMessageStatus = (senderId, recipientId, conversationId) => {
   socket.emit("read-message", {
     senderId,
+    recipientId,
     conversationId,
   });
 };
 
 export const updateMessageStatusHandler =
-  (activeConversation, conversations, conversationId, senderId) =>
+  (activeConversation, conversations, conversationId, senderId, recipientId) =>
   async (dispatch) => {
     try {
       // no active chat, not send read-message event
@@ -154,7 +168,7 @@ export const updateMessageStatusHandler =
 
       dispatch(setReadMessage(senderId, activeConvo.id));
 
-      sendReadMessageStatus(senderId, activeConvo.id);
+      sendReadMessageStatus(senderId, recipientId, activeConvo.id);
     } catch (error) {
       console.error(error);
     }
@@ -194,6 +208,29 @@ export const initializeReadMessageIdHandler =
       if (!foundMessage) return;
 
       dispatch(setReadMessageId(conversation.id, foundMessage.id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+export const unreadMessageHandler =
+  (conversationId, conversations, activeConversation) => (dispatch) => {
+    try {
+      // no avtiveconversation, increment unread message
+      if (activeConversation === "") {
+        return dispatch(incrementUnReadMessage(conversationId));
+      }
+
+      // if active converesation found, then find convo and reset
+      let foundConversation = conversations.find(
+        (convo) => convo.otherUser.username === activeConversation
+      );
+
+      if (!foundConversation) return;
+
+      if (foundConversation.id === conversationId)
+        return dispatch(resetUnReadMessage(foundConversation.id));
+      else return dispatch(incrementUnReadMessage(conversationId));
     } catch (error) {
       console.error(error);
     }
