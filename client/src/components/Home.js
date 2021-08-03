@@ -35,7 +35,7 @@ const Home = ({ user, fetchConversations, logout }) => {
 
   return (
     <>
-      {!user.id ? (
+      {!user && !user.id ? (
         isLoggedIn ? (
           <Redirect to="/login" />
         ) : (
