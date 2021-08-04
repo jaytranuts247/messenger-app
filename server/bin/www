@@ -12,7 +12,6 @@ const http = require("http");
 const db = require("../db");
 const onlineUsers = require("../onlineUsers");
 const cookieParser = require("cookie-parser");
-const clientSocketInfo = require("../clientSocketInfo");
 const jwt = require("jsonwebtoken");
 /**
  * Get port from environment and store in Express.
@@ -57,20 +56,16 @@ io.on("connection", (socket) => {
 
   socket.on("update-socketId", ({ userId, socketId }) => {
     if (userId && socketId)
-      clientSocketInfo.set(userId, {
+      onlineUsers.set(userId, {
         userId,
         socketId,
       });
   });
 
-  // add socket to clientSocketInfo
+  // add socket to onlineUsers
   socket.on("go-online", ({ id, socketId }) => {
-    if (!onlineUsers.includes(id)) {
-      onlineUsers.push(id);
-    }
-
-    if (!clientSocketInfo.has(id) && socketId) {
-      clientSocketInfo.set(id, {
+    if (!onlineUsers.has(id) && socketId) {
+      onlineUsers.set(id, {
         userId: id,
         socketId,
       });
@@ -80,41 +75,31 @@ io.on("connection", (socket) => {
   });
 
   socket.on("new-message", (data) => {
-    if (clientSocketInfo.has(data.recipientId)) {
-      io.to(clientSocketInfo.get(data.recipientId).socketId).emit(
-        "new-message",
-        {
-          message: data.message,
-          sender: data.sender,
-          recipientId: data.recipientId,
-        }
-      );
+    if (onlineUsers.has(data.recipientId)) {
+      io.to(onlineUsers.get(data.recipientId).socketId).emit("new-message", {
+        message: data.message,
+        sender: data.sender,
+        recipientId: data.recipientId,
+      });
     }
   });
 
   socket.on("read-message", (data) => {
-    if (clientSocketInfo.has(data.senderId)) {
-      io.to(clientSocketInfo.get(data.senderId).socketId).emit(
-        "read-message",
-        data
-      );
+    if (onlineUsers.has(data.senderId)) {
+      io.to(onlineUsers.get(data.senderId).socketId).emit("read-message", data);
     }
   });
 
   socket.on("logout", (id) => {
-    if (onlineUsers.includes(id)) {
-      userIndex = onlineUsers.indexOf(id);
-      onlineUsers.splice(userIndex, 1);
+    if (onlineUsers.has(id)) {
+      onlineUsers.delete(id);
       socket.broadcast.emit("remove-offline-user", id);
     }
   });
 
   socket.on("is-typing", (data) => {
-    if (clientSocketInfo.has(data.recipientId)) {
-      io.to(clientSocketInfo.get(data.recipientId).socketId).emit(
-        "is-typing",
-        data
-      );
+    if (onlineUsers.has(data.recipientId)) {
+      io.to(onlineUsers.get(data.recipientId).socketId).emit("is-typing", data);
     }
   });
   socket.on("disconnect", () => {
