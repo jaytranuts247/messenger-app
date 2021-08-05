@@ -2,14 +2,19 @@ import React, { useEffect } from "react";
 import { Box } from "@material-ui/core";
 import { BadgeAvatar, ChatContent } from "../Sidebar";
 import { makeStyles } from "@material-ui/core/styles";
-import { setActiveChat } from "../../store/activeConversation";
-import { connect } from "react-redux";
+import {
+  selectActiveConversation,
+  setActiveChat,
+} from "../../store/activeConversation";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   initializeReadMessageIdHandler,
   updateMessageStatusHandler,
 } from "../../store/utils/thunkCreators";
 import { resetUnReadMessage } from "../../store/unReadMessages";
+import { selectUser } from "../../store/user";
+import { selectConversations } from "../../store/conversations";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -25,36 +30,34 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const Chat = ({
-  user,
-  conversation,
-  conversations,
-  activeConversation,
-  setActiveChat,
-  updateMessageStatusHandler,
-  resetUnReadMessage,
-  initializeReadMessageIdHandler,
-}) => {
+const Chat = ({ conversation }) => {
+  const user = useSelector(selectUser);
+  const conversations = useSelector(selectConversations);
+  const activeConversation = useSelector(selectActiveConversation);
+
+  const dispatch = useDispatch();
   const classes = useStyles();
 
   useEffect(() => {
     if (!conversation) return;
-    initializeReadMessageIdHandler(conversation);
-  }, []);
+    dispatch(initializeReadMessageIdHandler(conversation));
+  }, [dispatch]);
 
-  const handleClick = async (conversation) => {
-    await setActiveChat(conversation.otherUser.username);
+  const handleClick = (conversation) => {
+    dispatch(setActiveChat(conversation.otherUser.username));
 
-    resetUnReadMessage(conversation.id);
+    dispatch(resetUnReadMessage(conversation.id));
 
     // if there is no conversation Id, no need to process and send read status
     if (!conversation.id) return;
-    updateMessageStatusHandler(
-      activeConversation,
-      conversations,
-      conversation.id,
-      conversation.otherUser.id,
-      user.id
+    dispatch(
+      updateMessageStatusHandler(
+        activeConversation,
+        conversations,
+        conversation.id,
+        conversation.otherUser.id,
+        user.id
+      )
     );
   };
 
@@ -71,40 +74,4 @@ const Chat = ({
   );
 };
 
-const mapStateToProps = (state) => {
-  return {
-    user: state.user,
-    conversations: state.conversations,
-    activeConversation: state.activeConversation,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    setActiveChat: (username) => {
-      dispatch(setActiveChat(username));
-    },
-    updateMessageStatusHandler: (
-      activeConversation,
-      conversations,
-      conversationId,
-      senderId,
-      recipientId
-    ) =>
-      dispatch(
-        updateMessageStatusHandler(
-          activeConversation,
-          conversations,
-          conversationId,
-          senderId,
-          recipientId
-        )
-      ),
-    resetUnReadMessage: (conversationId) =>
-      dispatch(resetUnReadMessage(conversationId)),
-    initializeReadMessageIdHandler: (conversation) =>
-      dispatch(initializeReadMessageIdHandler(conversation)),
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Chat);
+export default Chat;

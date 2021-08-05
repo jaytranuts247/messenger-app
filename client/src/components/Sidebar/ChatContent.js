@@ -1,9 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { Box, Typography, Badge } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-import { connect } from "react-redux";
-import { useEffect } from "react/cjs/react.development";
-import { setUnReadMessage } from "../../store/unReadMessages";
+import { useDispatch, useSelector } from "react-redux";
+
+import {
+  selectUnReadMessages,
+  setUnReadMessage,
+} from "../../store/unReadMessages";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -42,9 +45,11 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const ChatContent = (props) => {
+  const unReadMessages = useSelector(selectUnReadMessages);
+  const dispatch = useDispatch();
   const classes = useStyles();
 
-  const { conversation, unReadMessages, setUnReadMessageCount } = props;
+  const { conversation } = props;
   const { latestMessageText, otherUser } = conversation;
 
   const unReadMessage = useMemo(
@@ -60,7 +65,7 @@ const ChatContent = (props) => {
         (message.senderId === otherUser.id && !message.readStatus ? 1 : 0),
       0
     );
-    setUnReadMessageCount(conversation.id, unReadMessageCount);
+    dispatch(setUnReadMessage(conversation.id, unReadMessageCount));
   }, []);
 
   return (
@@ -91,15 +96,4 @@ const ChatContent = (props) => {
   );
 };
 
-const mapStateToProps = (state) => ({
-  unReadMessages: state.unReadMessages,
-});
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    setUnReadMessageCount: (conversationId, unReadMessageCount) =>
-      dispatch(setUnReadMessage(conversationId, unReadMessageCount)),
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ChatContent);
+export default ChatContent;

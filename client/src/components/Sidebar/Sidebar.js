@@ -1,8 +1,9 @@
 import React from "react";
 import { Box, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-import { connect } from "react-redux";
+import { useSelector } from "react-redux";
 import { Search, Chat, CurrentUser } from "./index.js";
+import { selectConversations } from "../../store/conversations.js";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -21,7 +22,8 @@ const useStyles = makeStyles(() => ({
 
 const Sidebar = (props) => {
   const classes = useStyles();
-  const conversations = props.conversations || [];
+  const conversations = useSelector(selectConversations) || [];
+
   const { handleChange, searchTerm } = props;
 
   return (
@@ -54,10 +56,4 @@ const Sidebar = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
-  return {
-    conversations: state.conversations,
-  };
-};
-
-export default connect(mapStateToProps)(Sidebar);
+export default Sidebar;

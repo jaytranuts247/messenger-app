@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Box, Grid } from "@material-ui/core";
 import { SenderBubble, OtherUserBubble } from "../ActiveChat";
 import moment from "moment";
-import { connect } from "react-redux";
+import { useSelector } from "react-redux";
 import { makeStyles } from "@material-ui/core/styles";
+import { selectReadMessages } from "../../store/readMessages";
 
 const useStyles = makeStyles(() => ({
   gridContainer: {
@@ -23,17 +24,11 @@ const getReadMessageId = (readMessages, conversationId) => {
 };
 
 const Messages = (props) => {
+  const readMessages = useSelector(selectReadMessages);
   const classes = useStyles();
   const [readMessageId, setReadMessageId] = useState(0);
   const messageEndRef = useRef();
-  const {
-    messages,
-    otherUser,
-    userId,
-    isTyping,
-    conversationId,
-    readMessages,
-  } = props;
+  const { messages, otherUser, userId, isTyping, conversationId } = props;
 
   const scrollToBottom = () => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -92,8 +87,4 @@ const Messages = (props) => {
   );
 };
 
-const mapStateToProps = (state) => ({
-  readMessages: state.readMessages,
-});
-
-export default connect(mapStateToProps, null)(Messages);
+export default Messages;

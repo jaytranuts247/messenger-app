@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Redirect } from "react-router-dom";
-import { connect } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Grid, CssBaseline, Button } from "@material-ui/core";
 import { SidebarContainer } from "./Sidebar";
 import { ActiveChat } from "./ActiveChat";
 import { logout, fetchConversations } from "../store/utils/thunkCreators";
 import { clearOnLogout } from "../store/index";
-import { useEffect } from "react/cjs/react.development";
+import { selectUser } from "../store/user";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -16,9 +16,19 @@ const useStyles = makeStyles(() => ({
   logout: {},
 }));
 
-const Home = ({ user, fetchConversations, logout }) => {
+const Home = () => {
+  const user = useSelector(selectUser);
+  const dispatch = useDispatch();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const classes = useStyles();
+
+  const logoutHandler = useCallback(
+    (id) => {
+      dispatch(logout(id));
+      dispatch(clearOnLogout());
+    },
+    [dispatch]
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -26,16 +36,17 @@ const Home = ({ user, fetchConversations, logout }) => {
   }, [user.id, user, setIsLoggedIn]);
 
   useEffect(() => {
-    fetchConversations();
-  }, []);
+    if (!dispatch || !fetchConversations) return;
+    dispatch(fetchConversations());
+  }, [dispatch]);
 
-  const handleLogout = async () => {
-    await logout(user.id);
+  const handleLogout = () => {
+    logoutHandler(user.id);
   };
 
   return (
     <>
-      {!user && !user.id ? (
+      {!user.id ? (
         isLoggedIn ? (
           <Redirect to="/login" />
         ) : (
@@ -58,23 +69,4 @@ const Home = ({ user, fetchConversations, logout }) => {
   );
 };
 
-const mapStateToProps = (state) => {
-  return {
-    user: state.user,
-    conversations: state.conversations,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    logout: (id) => {
-      dispatch(logout(id));
-      dispatch(clearOnLogout());
-    },
-    fetchConversations: () => {
-      dispatch(fetchConversations());
-    },
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Home);
+export default Home;
