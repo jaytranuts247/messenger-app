@@ -42,4 +42,6 @@ const reducer = (state = [], action) => {
   }
 };
 
+export const selectUnReadMessages = (state) => state.unReadMessages;
+
 export default reducer;

@@ -118,4 +118,6 @@ const reducer = (state = [], action) => {
   }
 };
 
+export const selectConversations = (state) => state.conversations;
+
 export default reducer;

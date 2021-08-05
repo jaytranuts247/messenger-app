@@ -1,19 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Route, Switch, withRouter } from "react-router-dom";
-import { connect } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { fetchUser } from "./store/utils/thunkCreators";
 import Signup from "./Signup.js";
 import Login from "./Login.js";
 import { Home, SnackbarError } from "./components";
+import { setSocketAuthToken } from "./store/utils/setSocketAuthToken";
+import { selectUser } from "./store/user";
 
-const Routes = (props) => {
-  const { user, fetchUser } = props;
+// set socket token to auth
+setSocketAuthToken();
+
+const Routes = () => {
+  const user = useSelector(selectUser);
+  const dispatch = useDispatch();
   const [errorMessage, setErrorMessage] = useState("");
   const [snackBarOpen, setSnackBarOpen] = useState(false);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    dispatch(fetchUser());
+  }, [fetchUser, dispatch]);
 
   useEffect(() => {
     if (user.error) {
@@ -27,7 +33,7 @@ const Routes = (props) => {
     }
   }, [user.error]);
 
-  if (props.user.isFetchingUser) {
+  if (user.isFetchingUser) {
     return <div>Loading...</div>;
   }
 
@@ -46,7 +52,7 @@ const Routes = (props) => {
         <Route
           exact
           path="/"
-          render={(props) => (props.user?.id ? <Home /> : <Signup />)}
+          render={() => (user?.id ? <Home /> : <Signup />)}
         />
         <Route path="/home" component={Home} />
       </Switch>
@@ -54,18 +60,4 @@ const Routes = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
-  return {
-    user: state.user,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    fetchUser() {
-      dispatch(fetchUser());
-    },
-  };
-};
-
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Routes));
+export default withRouter(Routes);

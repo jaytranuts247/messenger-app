@@ -106,9 +106,7 @@ export const setIsTypingToStore = (state, payload) => {
   return state.map((convo) => {
     if (convo.id === conversationId) {
       let newConvo = { ...convo };
-
       newConvo.isTyping = isTyping;
-      console.log(newConvo);
       return newConvo;
     }
     return convo;

@@ -1,17 +1,22 @@
-import React, { Component } from "react";
+import React, { useEffect } from "react";
 import { Box } from "@material-ui/core";
 import { BadgeAvatar, ChatContent } from "../Sidebar";
-import { withStyles } from "@material-ui/core/styles";
-import { setActiveChat } from "../../store/activeConversation";
-import { connect } from "react-redux";
+import { makeStyles } from "@material-ui/core/styles";
+import {
+  selectActiveConversation,
+  setActiveChat,
+} from "../../store/activeConversation";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   initializeReadMessageIdHandler,
   updateMessageStatusHandler,
 } from "../../store/utils/thunkCreators";
 import { resetUnReadMessage } from "../../store/unReadMessages";
+import { selectUser } from "../../store/user";
+import { selectConversations } from "../../store/conversations";
 
-const styles = {
+const useStyles = makeStyles(() => ({
   root: {
     borderRadius: 8,
     height: 80,
@@ -23,84 +28,50 @@ const styles = {
       cursor: "grab",
     },
   },
-};
+}));
 
-class Chat extends Component {
-  componentDidMount() {
-    if (!this.props.conversation) return;
-    this.props.initializeReadMessageIdHandler(this.props.conversation);
-  }
+const Chat = ({ conversation }) => {
+  const user = useSelector(selectUser);
+  const conversations = useSelector(selectConversations);
+  const activeConversation = useSelector(selectActiveConversation);
 
-  handleClick = async (conversation) => {
-    await this.props.setActiveChat(conversation.otherUser.username);
+  const dispatch = useDispatch();
+  const classes = useStyles();
+
+  useEffect(() => {
+    if (!conversation) return;
+    dispatch(initializeReadMessageIdHandler(conversation));
+  }, [dispatch]);
+
+  const handleClick = (conversation) => {
+    dispatch(setActiveChat(conversation.otherUser.username));
+
+    dispatch(resetUnReadMessage(conversation.id));
 
     // if there is no conversation Id, no need to process and send read status
-    if (!this.props.conversation.id) return;
-
-    this.props.updateMessageStatusHandler(
-      this.props.activeConversation,
-      this.props.conversations,
-      this.props.conversation.id,
-      this.props.conversation.otherUser.id
+    if (!conversation.id) return;
+    dispatch(
+      updateMessageStatusHandler(
+        activeConversation,
+        conversations,
+        conversation.id,
+        conversation.otherUser.id,
+        user.id
+      )
     );
-    this.props.resetUnReadMessage(this.props.conversation.id);
   };
 
-  render() {
-    const { classes } = this.props;
-    const otherUser = this.props.conversation.otherUser;
-
-    return (
-      <Box
-        onClick={() => this.handleClick(this.props.conversation)}
-        className={classes.root}
-      >
-        <BadgeAvatar
-          photoUrl={otherUser.photoUrl}
-          username={otherUser.username}
-          online={otherUser.online}
-          sidebar={true}
-        />
-        <ChatContent conversation={this.props.conversation} />
-      </Box>
-    );
-  }
-}
-
-const mapStateToProps = (state) => {
-  return {
-    conversations: state.conversations,
-    activeConversation: state.activeConversation,
-  };
+  return (
+    <Box onClick={() => handleClick(conversation)} className={classes.root}>
+      <BadgeAvatar
+        photoUrl={conversation.otherUser.photoUrl}
+        username={conversation.otherUser.username}
+        online={conversation.otherUser.online}
+        sidebar={true}
+      />
+      <ChatContent conversation={conversation} />
+    </Box>
+  );
 };
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-    setActiveChat: (username) => {
-      dispatch(setActiveChat(username));
-    },
-    updateMessageStatusHandler: (
-      activeConversation,
-      conversations,
-      conversationId,
-      senderId
-    ) =>
-      dispatch(
-        updateMessageStatusHandler(
-          activeConversation,
-          conversations,
-          conversationId,
-          senderId
-        )
-      ),
-    resetUnReadMessage: (conversationId) =>
-      dispatch(resetUnReadMessage(conversationId)),
-    initializeReadMessageIdHandler: (conversation) =>
-      dispatch(initializeReadMessageIdHandler(conversation)),
-  };
-};
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(withStyles(styles)(Chat));
+export default Chat;

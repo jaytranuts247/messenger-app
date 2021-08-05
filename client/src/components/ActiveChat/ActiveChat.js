@@ -2,13 +2,16 @@ import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box } from "@material-ui/core";
 import { Input, Header, Messages } from "./index";
-import { connect } from "react-redux";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../store/user";
 
 const useStyles = makeStyles(() => ({
   root: {
     display: "flex",
     flexGrow: 8,
     flexDirection: "column",
+    height: "100%",
+    maxHeight: "100%",
   },
   chatContainer: {
     marginLeft: 41,
@@ -16,14 +19,26 @@ const useStyles = makeStyles(() => ({
     display: "flex",
     flexDirection: "column",
     flexGrow: 1,
+    height: "100%",
     justifyContent: "flex-end",
+    overflow: "auto",
   },
 }));
 
-const ActiveChat = (props) => {
+const ActiveChat = () => {
+  const user = useSelector(selectUser);
+
   const classes = useStyles();
-  const { user } = props;
-  const conversation = props.conversation || {};
+
+  const conversation = useSelector(
+    (state) =>
+      (state.conversations &&
+        state.conversations.find(
+          (conversation) =>
+            conversation.otherUser.username === state.activeConversation
+        )) ||
+      {}
+  );
 
   return (
     <Box className={classes.root}>
@@ -53,16 +68,4 @@ const ActiveChat = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
-  return {
-    user: state.user,
-    conversation:
-      state.conversations &&
-      state.conversations.find(
-        (conversation) =>
-          conversation.otherUser.username === state.activeConversation
-      ),
-  };
-};
-
-export default connect(mapStateToProps, null)(ActiveChat);
+export default ActiveChat;

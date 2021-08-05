@@ -19,4 +19,6 @@ const reducer = (state = [], action) => {
   }
 };
 
+export const selectReadMessages = (state) => state.readMessages;
+
 export default reducer;

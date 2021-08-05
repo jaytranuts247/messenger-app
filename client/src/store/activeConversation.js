@@ -3,7 +3,7 @@ const SET_ACTIVE_CHAT = "SET_ACTIVE_CHAT";
 export const setActiveChat = (username) => {
   return {
     type: SET_ACTIVE_CHAT,
-    username
+    username,
   };
 };
 
@@ -16,5 +16,7 @@ const reducer = (state = "", action) => {
       return state;
   }
 };
+
+export const selectActiveConversation = (state) => state.activeConversation;
 
 export default reducer;
