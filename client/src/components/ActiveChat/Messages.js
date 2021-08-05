@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Grid } from "@material-ui/core";
+import React, { useState, useEffect, useRef } from "react";
+import { Box, Grid } from "@material-ui/core";
 import { SenderBubble, OtherUserBubble } from "../ActiveChat";
 import moment from "moment";
-import { connect } from "react-redux";
+import { useSelector } from "react-redux";
+import { makeStyles } from "@material-ui/core/styles";
+import { selectReadMessages } from "../../store/readMessages";
+
+const useStyles = makeStyles(() => ({
+  gridContainer: {
+    overflowY: "scroll",
+    flexWrap: "nowrap",
+  },
+}));
 
 const getReadMessageId = (readMessages, conversationId) => {
   if (!conversationId) return 0;
@@ -15,15 +24,19 @@ const getReadMessageId = (readMessages, conversationId) => {
 };
 
 const Messages = (props) => {
+  const readMessages = useSelector(selectReadMessages);
+  const classes = useStyles();
   const [readMessageId, setReadMessageId] = useState(0);
-  const {
-    messages,
-    otherUser,
-    userId,
-    isTyping,
-    conversationId,
-    readMessages,
-  } = props;
+  const messageEndRef = useRef();
+  const { messages, otherUser, userId, isTyping, conversationId } = props;
+
+  const scrollToBottom = () => {
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     if (!readMessages) return;
@@ -31,7 +44,11 @@ const Messages = (props) => {
   }, [readMessages, conversationId]);
 
   return (
-    <Grid container direction="column-reverse">
+    <Grid
+      container
+      direction="column-reverse"
+      className={classes.gridContainer}
+    >
       {isTyping && (
         <Grid item>
           <OtherUserBubble
@@ -62,6 +79,7 @@ const Messages = (props) => {
                 otherUser={otherUser}
               />
             )}
+            <Box ref={messageEndRef}></Box>
           </Grid>
         );
       })}
@@ -69,8 +87,4 @@ const Messages = (props) => {
   );
 };
 
-const mapStateToProps = (state) => ({
-  readMessages: state.readMessages,
-});
-
-export default connect(mapStateToProps, null)(Messages);
+export default Messages;
