@@ -27,6 +27,7 @@ const Messages = (props) => {
   const readMessages = useSelector(selectReadMessages);
   const classes = useStyles();
   const [readMessageId, setReadMessageId] = useState(0);
+
   const messageEndRef = useRef();
   const { messages, otherUser, userId, isTyping, conversationId } = props;
 
@@ -37,6 +38,7 @@ const Messages = (props) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
 
   useEffect(() => {
     if (!readMessages) return;
